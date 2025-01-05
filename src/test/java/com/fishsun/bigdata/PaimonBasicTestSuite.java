@@ -10,19 +10,23 @@ import org.apache.flink.table.api.Schema;
 import org.apache.flink.table.api.TableDescriptor;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.junit.Before;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.ZoneId;
 
 public class PaimonBasicTestSuite {
+    protected static final Logger logger = LoggerFactory.getLogger(PaimonBasicTestSuite.class);
     protected StreamExecutionEnvironment env;
     protected StreamTableEnvironment tableEnv;
 
     @Before
     public void setUp() {
         // 创建 Flink 流执行环境和 SQL 表环境
-        Configuration conf = new Configuration();
-        conf.setInteger(RestOptions.PORT, 9999);
-        env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(conf);
+//        Configuration conf = new Configuration();
+//        conf.setInteger(RestOptions.PORT, 8081);
+//        env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(conf);
+        env = StreamExecutionEnvironment.getExecutionEnvironment();
         // 配置
         env.setMaxParallelism(2);
         // env.getConfig().addDefaultKryoSerializer(MyCustomType.class, CustomKryoSerializer.class);
@@ -69,7 +73,7 @@ public class PaimonBasicTestSuite {
     private void registerPaimonCatalog() {
         tableEnv.executeSql("CREATE CATALOG paimon WITH (\n" +
                 "    'type' = 'paimon',\n" +
-                "    'warehouse' = 'hdfs://dd-xian-0103-001:8020/lakehouse'\n" +
+                "    'warehouse' = 'file:///home/fishsun/IdeaProjects/flink-paimon-it/lakehouse'\n" + //'hdfs://dd-xian-0103-001:8020/lakehouse'\n" +
                 "    );");
         tableEnv.executeSql("use catalog paimon");
         tableEnv.executeSql("create database if not exists test");
