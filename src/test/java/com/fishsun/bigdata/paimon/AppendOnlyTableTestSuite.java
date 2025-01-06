@@ -3,7 +3,7 @@ package com.fishsun.bigdata.paimon;
 import com.fishsun.bigdata.PaimonBasicTestSuite;
 import org.junit.Test;
 
-public class AppendOnlyTableTest extends PaimonBasicTestSuite {
+public class AppendOnlyTableTestSuite extends PaimonBasicTestSuite {
     @Test
     public void testScaleTable() {
         tableEnv.executeSql("CREATE TABLE if not exists paimon.test.scale_tbl(\n" +

@@ -5,7 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 
-public class BucketTableTest extends PaimonBasicTestSuite {
+public class BucketTableTestSuite extends PaimonBasicTestSuite {
 
     @Before
     public void setUp() {
