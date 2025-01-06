@@ -1,9 +1,10 @@
 package com.fishsun.bigdata.model;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
-public class IncomeInfo {
+public class IncomeInfo implements Serializable {
     protected static final List<String> nameLists = Arrays.asList(
             "张三", "李四", "王五", "赵六", "孙七", "周八", "吴九", "郑十", "王大", "陈二", "刘三", "杨四"
     );

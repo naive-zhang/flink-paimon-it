@@ -3,6 +3,7 @@ package com.fishsun.bigdata.utils;
 import com.fishsun.bigdata.model.IncomeInfo;
 import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
+import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
 
 import java.util.ArrayList;
@@ -14,13 +15,12 @@ public class ChangeLogUtils {
     private static final Random RANDOM = new Random();
 
     // 构造单个 RowData
-    private static RowData createRow(IncomeInfo incomeInfo, RowKind rowKind) {
-        GenericRowData row = new GenericRowData(rowKind, 4);
-        row.setField(0, incomeInfo.name);
-        row.setField(1, incomeInfo.gender);
-        row.setField(2, incomeInfo.dept);
-        row.setField(3, incomeInfo.income);
-        return row;
+    private static Row createRow(IncomeInfo incomeInfo, RowKind rowKind) {
+        return Row.ofKind(rowKind,
+                incomeInfo.name,
+                incomeInfo.gender,
+                incomeInfo.dept,
+                incomeInfo.income);
     }
 
     // 生成随机 IncomeInfo 对象
@@ -34,8 +34,8 @@ public class ChangeLogUtils {
     }
 
     // 生成 ChangeLog 数据流
-    public static List<RowData> generateChangeLog(int recordCount) {
-        List<RowData> changeLog = new ArrayList<>();
+    public static List<Row> generateChangeLog(int recordCount) {
+        List<Row> changeLog = new ArrayList<>();
 
         for (int i = 0; i < recordCount; i++) {
             IncomeInfo baseInfo = randomIncomeInfo();
