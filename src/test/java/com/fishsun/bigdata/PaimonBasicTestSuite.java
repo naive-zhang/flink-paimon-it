@@ -1,5 +1,6 @@
 package com.fishsun.bigdata;
 
+import com.fishsun.bigdata.utils.FileUtils;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.RestOptions;
 import org.apache.flink.connector.datagen.table.DataGenConnectorOptions;
@@ -13,6 +14,7 @@ import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.time.ZoneId;
 
 public class PaimonBasicTestSuite {
@@ -21,7 +23,7 @@ public class PaimonBasicTestSuite {
     protected StreamTableEnvironment tableEnv;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         // 创建 Flink 流执行环境和 SQL 表环境
 //        Configuration conf = new Configuration();
 //        conf.setInteger(RestOptions.PORT, 8081);
@@ -47,6 +49,7 @@ public class PaimonBasicTestSuite {
                         .build())
                 .option(DataGenConnectorOptions.ROWS_PER_SECOND, 100L)
                 .build());
+        FileUtils.clearLakehouse();
         registerDataGen();
         registerPaimonCatalog();
     }
@@ -73,7 +76,7 @@ public class PaimonBasicTestSuite {
     private void registerPaimonCatalog() {
         tableEnv.executeSql("CREATE CATALOG paimon WITH (\n" +
                 "    'type' = 'paimon',\n" +
-                "    'warehouse' = 'file:///home/fishsun/IdeaProjects/flink-paimon-it/lakehouse'\n" + //'hdfs://dd-xian-0103-001:8020/lakehouse'\n" +
+                "    'warehouse' = 'file:///" + FileUtils.getDefaultLakeHousePath() + "'\n" + //'hdfs://dd-xian-0103-001:8020/lakehouse'\n" +
                 "    );");
         tableEnv.executeSql("use catalog paimon");
         tableEnv.executeSql("create database if not exists test");

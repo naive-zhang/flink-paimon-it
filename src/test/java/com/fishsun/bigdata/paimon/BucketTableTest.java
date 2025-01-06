@@ -4,11 +4,13 @@ import com.fishsun.bigdata.PaimonBasicTestSuite;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
+
 
 public class BucketTableTest extends PaimonBasicTestSuite {
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         super.setUp();
     }
 
