@@ -1,7 +1,8 @@
 package com.fishsun.bigdata;
 
-import org.apache.flink.configuration.Configuration;
-import org.apache.flink.configuration.RestOptions;
+import com.fishsun.bigdata.utils.FileUtils;
+// import org.apache.flink.configuration.Configuration;
+// import org.apache.flink.configuration.RestOptions;
 import org.apache.flink.connector.datagen.table.DataGenConnectorOptions;
 import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -71,10 +72,11 @@ public class PaimonBasicTestSuite {
     }
 
     private void registerPaimonCatalog() {
-        tableEnv.executeSql("CREATE CATALOG paimon WITH (\n" +
+        String catalogCreateDdl =  "CREATE CATALOG paimon WITH (\n" +
                 "    'type' = 'paimon',\n" +
-                "    'warehouse' = 'file:///home/fishsun/IdeaProjects/flink-paimon-it/lakehouse'\n" + //'hdfs://dd-xian-0103-001:8020/lakehouse'\n" +
-                "    );");
+                "    'warehouse' = 'file://" + FileUtils.getLakehouseDefaultPath() + "'\n" + //'hdfs://dd-xian-0103-001:8020/lakehouse'\n" +
+                "    );";
+        tableEnv.executeSql(catalogCreateDdl);
         tableEnv.executeSql("use catalog paimon");
         tableEnv.executeSql("create database if not exists test");
     }

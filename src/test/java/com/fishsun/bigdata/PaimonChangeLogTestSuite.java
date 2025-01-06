@@ -2,9 +2,7 @@ package com.fishsun.bigdata;
 
 import com.fishsun.bigdata.utils.ChangeLogUtils;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
-import org.apache.flink.table.api.Schema;
 import org.apache.flink.table.api.Table;
-import org.apache.flink.table.data.RowData;
 import org.apache.flink.types.Row;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +26,7 @@ public class PaimonChangeLogTestSuite extends PaimonBasicTestSuite {
                 $("f2").as("dept"),
                 $("f3").as("income")
         );
-        tableEnv.createTemporaryView("income_info", incomeInfoTbl);
+        tableEnv.createTemporaryView("default_catalog.test.income_info", incomeInfoTbl);
     }
 
     @Test
