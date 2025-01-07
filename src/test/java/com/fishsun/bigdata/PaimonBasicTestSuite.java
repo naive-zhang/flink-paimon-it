@@ -1,8 +1,8 @@
 package com.fishsun.bigdata;
 
 import com.fishsun.bigdata.utils.FileUtils;
-// import org.apache.flink.configuration.Configuration;
-// import org.apache.flink.configuration.RestOptions;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.RestOptions;
 import org.apache.flink.connector.datagen.table.DataGenConnectorOptions;
 import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -23,21 +23,15 @@ public class PaimonBasicTestSuite {
 
     @Before
     public void setUp() {
-        // 创建 Flink 流执行环境和 SQL 表环境
-//        Configuration conf = new Configuration();
-//        conf.setInteger(RestOptions.PORT, 8081);
-//        env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(conf);
-        env = StreamExecutionEnvironment.getExecutionEnvironment();
-        // 配置
+        Configuration conf = new Configuration();
+        //设置WebUI绑定的本地端口
+        conf.setString(RestOptions.BIND_PORT, "8082");
+        // 设置执行环境
+        env = StreamExecutionEnvironment.createLocalEnvironment(conf);
         env.setMaxParallelism(2);
-        // env.getConfig().addDefaultKryoSerializer(MyCustomType.class, CustomKryoSerializer.class);
-        env.setParallelism(2);
-        // 10s for checkpoint
-        env.enableCheckpointing(10 * 1000L);
-        env.getCheckpointConfig().setCheckpointInterval(10 * 1000L);
-        env.getCheckpointConfig().setCheckpointStorage("file:///" + FileUtils.getCheckpointPath());
         env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
-        // set configuration early
+        env.setParallelism(2);
+        env.getCheckpointConfig().setCheckpointInterval(10 * 1000L);
         tableEnv = StreamTableEnvironment.create(env);
         tableEnv.getConfig().setLocalTimeZone(ZoneId.of("Asia/Shanghai"));
 
