@@ -7,7 +7,7 @@ import org.junit.Test;
 import java.io.IOException;
 
 
-public class BucketTableTest extends PaimonBasicTestSuite {
+public class BucketTableTestSuite extends PaimonBasicTestSuite {
 
     @Before
     public void setUp() throws IOException {

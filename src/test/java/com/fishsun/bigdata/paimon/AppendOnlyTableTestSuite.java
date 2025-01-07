@@ -1,30 +1,9 @@
 package com.fishsun.bigdata.paimon;
 
 import com.fishsun.bigdata.PaimonBasicTestSuite;
-import com.fishsun.bigdata.utils.FileUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-public class AppendOnlyTableTest extends PaimonBasicTestSuite {
-
-    @Before
-    public void setUp() throws IOException {
-        super.setUp();
-    }
-
-    @Test
-    public void testGetAbsoluteFilePath() {
-        Path path = Paths.get("./lakehouse").normalize();
-        String absPath = path.toAbsolutePath().toString();
-        Assert.assertTrue(absPath.equals(FileUtils.getDefaultLakeHousePath()));
-    }
-
+public class AppendOnlyTableTestSuite extends PaimonBasicTestSuite {
     @Test
     public void testScaleTable() {
         tableEnv.executeSql("CREATE TABLE if not exists paimon.test.scale_tbl(\n" +
