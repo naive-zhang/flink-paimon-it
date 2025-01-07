@@ -10,7 +10,7 @@ import java.io.IOException;
 public class BucketTableTestSuite extends PaimonBasicTestSuite {
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() {
         super.setUp();
     }
 

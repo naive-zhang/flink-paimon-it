@@ -31,10 +31,12 @@ public class PaimonBasicTestSuite {
         // 配置
         env.setMaxParallelism(2);
         // env.getConfig().addDefaultKryoSerializer(MyCustomType.class, CustomKryoSerializer.class);
-        env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
         env.setParallelism(2);
         // 10s for checkpoint
+        env.enableCheckpointing(10 * 1000L);
         env.getCheckpointConfig().setCheckpointInterval(10 * 1000L);
+        env.getCheckpointConfig().setCheckpointStorage("file:///" + FileUtils.getCheckpointPath());
+        env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
         // set configuration early
         tableEnv = StreamTableEnvironment.create(env);
         tableEnv.getConfig().setLocalTimeZone(ZoneId.of("Asia/Shanghai"));
@@ -72,10 +74,11 @@ public class PaimonBasicTestSuite {
     }
 
     private void registerPaimonCatalog() {
-        String catalogCreateDdl =  "CREATE CATALOG paimon WITH (\n" +
+        String catalogCreateDdl = "CREATE CATALOG paimon WITH (\n" +
                 "    'type' = 'paimon',\n" +
                 "    'warehouse' = 'file://" + FileUtils.getLakehouseDefaultPath() + "'\n" + //'hdfs://dd-xian-0103-001:8020/lakehouse'\n" +
                 "    );";
+        System.out.println(catalogCreateDdl);
         tableEnv.executeSql(catalogCreateDdl);
         tableEnv.executeSql("use catalog paimon");
         tableEnv.executeSql("create database if not exists test");
