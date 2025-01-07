@@ -1,4 +1,7 @@
 .idea
 target
-lakehosue
+lakehouse
+lakehosue/*
 lakehouse/*
+checkpoint
+checkpoint/*
