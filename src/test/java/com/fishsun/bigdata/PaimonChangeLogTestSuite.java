@@ -38,7 +38,7 @@ public class PaimonChangeLogTestSuite extends PaimonBasicTestSuite {
 
     @Test
     public void testGenerateTblFromChangeLogStream() {
-        tableEnv.sqlQuery("select * from income_info")
+        tableEnv.sqlQuery("select * from default_catalog.test.income_info")
                 .execute()
                 .print();
     }
