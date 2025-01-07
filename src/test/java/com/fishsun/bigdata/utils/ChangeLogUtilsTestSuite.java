@@ -1,6 +1,5 @@
 package com.fishsun.bigdata.utils;
 
-import org.apache.flink.table.data.RowData;
 import org.apache.flink.types.Row;
 import org.junit.Test;
 

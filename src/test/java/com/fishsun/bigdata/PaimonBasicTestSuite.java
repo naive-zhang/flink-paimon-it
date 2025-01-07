@@ -20,19 +20,24 @@ public class PaimonBasicTestSuite {
     protected static final Logger logger = LoggerFactory.getLogger(PaimonBasicTestSuite.class);
     protected StreamExecutionEnvironment env;
     protected StreamTableEnvironment tableEnv;
+    protected long checkpointInterval;
 
     @Before
     public void setUp() {
+        checkpointInterval = 10 * 1000L;
         Configuration conf = new Configuration();
         //设置WebUI绑定的本地端口
         conf.setString(RestOptions.BIND_PORT, "8082");
         conf.setString("table.exec.sink.upsert-materialize", "NONE");
         // 设置执行环境
         env = StreamExecutionEnvironment.createLocalEnvironment(conf);
-        env.setMaxParallelism(2);
+        env.setMaxParallelism(1);
+        env.setParallelism(1);
         env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
-        env.setParallelism(2);
-        env.getCheckpointConfig().setCheckpointInterval(10 * 1000L);
+        env.getCheckpointConfig().setCheckpointInterval(checkpointInterval);
+        env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);
+        FileUtils.clearDir(FileUtils.getCheckpointPath(false));
+        env.getCheckpointConfig().setCheckpointStorage("file://" + FileUtils.getCheckpointPath());
         tableEnv = StreamTableEnvironment.create(env);
         tableEnv.getConfig().setLocalTimeZone(ZoneId.of("Asia/Shanghai"));
 
@@ -69,6 +74,7 @@ public class PaimonBasicTestSuite {
     }
 
     private void registerPaimonCatalog() {
+        FileUtils.clearDir(FileUtils.getLakehouseDefaultPath(false));
         String catalogCreateDdl = "CREATE CATALOG paimon WITH (\n" +
                 "    'type' = 'paimon',\n" +
                 "    'warehouse' = 'file://" + FileUtils.getLakehouseDefaultPath() + "'\n" + //'hdfs://dd-xian-0103-001:8020/lakehouse'\n" +

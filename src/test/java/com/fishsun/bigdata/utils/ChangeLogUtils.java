@@ -3,6 +3,7 @@ package com.fishsun.bigdata.utils;
 import com.fishsun.bigdata.model.IncomeInfo;
 import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.data.StringData;
 import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
 
@@ -16,11 +17,17 @@ public class ChangeLogUtils {
 
     // 构造单个 RowData
     private static Row createRow(IncomeInfo incomeInfo, RowKind rowKind) {
+        // Row rowData = new GenericRowData(rowKind, 4);
         return Row.ofKind(rowKind,
                 incomeInfo.name,
                 incomeInfo.gender,
                 incomeInfo.dept,
                 incomeInfo.income);
+        // rowData.setField(0, StringData.fromString(incomeInfo.name));
+        // rowData.setField(1, StringData.fromString(incomeInfo.gender));
+        // rowData.setField(2, StringData.fromString(incomeInfo.dept));
+        // rowData.setField(3, incomeInfo.income);
+        // return rowData;
     }
 
     // 生成随机 IncomeInfo 对象
