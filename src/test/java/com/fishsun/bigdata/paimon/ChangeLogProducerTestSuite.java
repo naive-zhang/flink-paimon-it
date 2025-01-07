@@ -18,7 +18,7 @@ public class ChangeLogProducerTestSuite extends PaimonBasicTestSuite {
     @Before
     public void setup() {
         super.setUp();
-        List<Row> rowData = ChangeLogUtils.generateChangeLog(10);
+        List<Row> rowData = ChangeLogUtils.generateChangeLog(100);
         DataStreamSource<Row> incomeInfoStream = env.fromCollection(rowData);
         incomeInfoTbl = tableEnv.fromChangelogStream(incomeInfoStream
         ).renameColumns(
@@ -45,13 +45,11 @@ public class ChangeLogProducerTestSuite extends PaimonBasicTestSuite {
                 "'changelog-producer'='none'\n" +
                 ");");
         tableEnv.executeSql("insert into paimon.test.income_info_none \n" +
-                "select name, gender, dept, income from default_catalog.test.income_info");
+                        "select name, gender, dept, income from default_catalog.test.income_info")
+                .print();
         tableEnv.sqlQuery("select name, gender, dept, income from paimon.test.income_info_none")
                 .execute()
                 .print();
-        // tableEnv.sqlQuery("select name, gender, dept, income from default_catalog.test.income_info")
-        //         .execute()
-        //         .print();
     }
 
     @Test

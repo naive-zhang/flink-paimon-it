@@ -26,6 +26,7 @@ public class PaimonBasicTestSuite {
         Configuration conf = new Configuration();
         //设置WebUI绑定的本地端口
         conf.setString(RestOptions.BIND_PORT, "8082");
+        conf.setString("table.exec.sink.upsert-materialize", "NONE");
         // 设置执行环境
         env = StreamExecutionEnvironment.createLocalEnvironment(conf);
         env.setMaxParallelism(2);
