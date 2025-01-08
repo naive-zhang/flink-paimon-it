@@ -47,15 +47,19 @@ public class FileUtils {
         return getCheckpointPath(true);
     }
 
-    public static void clearDir(String dir) {
+    public static void clearDir(String dir, boolean ensureDirExists) {
         Path path = Paths.get(dir);
         if (path.toFile().exists() && path.toFile().isDirectory()) {
             deleteDirectory(path.toFile());
         }
         path = Paths.get(dir);
-        if (path == null || !path.toFile().exists()) {
+        if (path == null || !path.toFile().exists() && ensureDirExists) {
             path.toFile().mkdirs();
         }
+    }
+
+    public static void clearDir(String dir) {
+        clearDir(dir, false);
     }
 
     private static boolean deleteDirectory(File directory) {
