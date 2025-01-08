@@ -27,8 +27,10 @@ public class PaimonBasicTestSuite {
         checkpointInterval = 10 * 1000L;
         Configuration conf = new Configuration();
         //设置WebUI绑定的本地端口
-        conf.setString(RestOptions.BIND_PORT, "8082");
+        conf.setString(RestOptions.BIND_PORT, "8090-8100");
         conf.setString("table.exec.sink.upsert-materialize", "NONE");
+        FileUtils.clearDir(FileUtils.getPipelineIOCachePath(false));
+        conf.setString("taskmanager.tmp.dirs", FileUtils.getPipelineIOCachePath(false));
         // 设置执行环境
         env = StreamExecutionEnvironment.createLocalEnvironment(conf);
         env.setMaxParallelism(1);
@@ -74,7 +76,6 @@ public class PaimonBasicTestSuite {
     }
 
     private void registerPaimonCatalog() {
-        FileUtils.clearDir(FileUtils.getLakehouseDefaultPath(false));
         String catalogCreateDdl = "CREATE CATALOG paimon WITH (\n" +
                 "    'type' = 'paimon',\n" +
                 "    'warehouse' = 'file://" + FileUtils.getLakehouseDefaultPath() + "'\n" + //'hdfs://dd-xian-0103-001:8020/lakehouse'\n" +

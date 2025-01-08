@@ -14,6 +14,17 @@ public class FileUtils {
         return path;
     }
 
+    public static String getPipelineIOCachePath() {
+        return getPipelineIOCachePath(true);
+    }
+
+    public static String getPipelineIOCachePath(boolean normalize) {
+        Path path = Paths.get("");
+        String pipePath = path.toAbsolutePath().toString() + "/tmp";
+        return normalize ? normalize(Paths.get(pipePath).normalize().toString()) :
+                Paths.get(pipePath).normalize().toString();
+    }
+
     public static String getLakehouseDefaultPath(boolean normalized) {
         Path path = Paths.get("");
         String lakehousePath = path.toAbsolutePath() + "/lakehouse";
@@ -40,6 +51,10 @@ public class FileUtils {
         Path path = Paths.get(dir);
         if (path.toFile().exists() && path.toFile().isDirectory()) {
             deleteDirectory(path.toFile());
+        }
+        path = Paths.get(dir);
+        if (path == null || !path.toFile().exists()) {
+            path.toFile().mkdirs();
         }
     }
 
