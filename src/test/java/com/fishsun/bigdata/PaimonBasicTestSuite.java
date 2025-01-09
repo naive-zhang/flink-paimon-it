@@ -56,7 +56,7 @@ public class PaimonBasicTestSuite {
         registerPaimonCatalog();
     }
 
-    private void registerDataGen() {
+    public void registerDataGen() {
         tableEnv.executeSql("create database test");
         tableEnv.executeSql("CREATE TABLE if not exists default_catalog.test.datagen1 (\n" +
                 "  `id` Int PRIMARY KEY NOT ENFORCED,\n" +

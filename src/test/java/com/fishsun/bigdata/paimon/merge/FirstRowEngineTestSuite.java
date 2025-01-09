@@ -4,7 +4,7 @@ import com.fishsun.bigdata.PaimonChangeLogTestSuite;
 import org.junit.Before;
 import org.junit.Test;
 
-public class FirstRowEngine extends PaimonChangeLogTestSuite {
+public class FirstRowEngineTestSuite extends PaimonChangeLogTestSuite {
     @Before
     @Override
     public void setUp() {

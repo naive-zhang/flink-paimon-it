@@ -4,7 +4,10 @@ from typing import List, Dict
 
 def load_parquet(file_path: str) -> pd.DataFrame:
     try:
-        df = pd.read_parquet(file_path)
+        if file_path.ends_with(".parquet"):
+            df = pd.read_parquet(file_path)
+        else:
+            df = pd.read_avro(file_path)
         return df
     except Exception as e:
         st.error(f"无法读取 Parquet 文件 `{file_path}`: {e}")
