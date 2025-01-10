@@ -1,13 +1,22 @@
 import streamlit as st
 import pandas as pd
 from typing import List, Dict
+import fastavro
+
+def read_avro_file(file_path) -> List:
+    with open(file_path, 'rb') as f:
+        reader = fastavro.reader(f)
+        records = []
+        for record in reader:
+            records.append(record)
+        return records
 
 def load_parquet(file_path: str) -> pd.DataFrame:
     try:
-        if file_path.ends_with(".parquet"):
+        if file_path.endswith(".parquet"):
             df = pd.read_parquet(file_path)
         else:
-            df = pd.read_avro(file_path)
+            df = pd.DataFrame(read_avro_file(file_path))
         return df
     except Exception as e:
         st.error(f"无法读取 Parquet 文件 `{file_path}`: {e}")
