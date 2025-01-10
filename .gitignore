@@ -7,3 +7,5 @@ checkpoint
 checkpoint/*
 tmp
 tmp/*
+logs
+py/*.json
