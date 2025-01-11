@@ -20,6 +20,15 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <java.version>1.8</java.version>
+        <!--  Use flink shaded guava  18.0-13.0 for flink 1.13   -->
+        <!--  Use flink shaded guava  30.1.1-jre-14.0 for flink-1.14  -->
+        <!--  Use flink shaded guava  30.1.1-jre-15.0 for flink-1.15  -->
+        <!--  Use flink shaded guava  30.1.1-jre-15.0 for flink-1.16  -->
+        <!--  Use flink shaded guava  30.1.1-jre-16.1 for flink-1.17  -->
+        <!--  Use flink shaded guava  31.1-jre-17.0   for flink-1.18  -->
+        <guava.shaded.flink.version>30.1.1-jre-16.1</guava.shaded.flink.version>
+        <cdc.flink.version>2.3.0</cdc.flink.version>
+        <debezium.version>1.9.7.Final</debezium.version>
     </properties>
 
     <dependencies>
@@ -165,27 +174,37 @@
             <artifactId>javax.ws.rs-api</artifactId>
         </dependency>
 
+
         <!-- flink cdc -->
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-mysql-cdc</artifactId>
-            <version>3.1.1</version>
+            <artifactId>flink-shaded-guava</artifactId>
+            <version>${guava.shaded.flink.version}</version>
+            <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.ververica</groupId>
+            <!-- add the dependency matching your database -->
+            <artifactId>flink-connector-mysql-cdc</artifactId>
+            <!-- The dependency is available only for stable releases, SNAPSHOT dependency need build by yourself. -->
+            <version>${cdc.flink.version}</version>
+            <scope>test</scope>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>io.debezium</groupId>-->
+<!--            <artifactId>debezium-connector-mysql</artifactId>-->
+<!--            <version>${debezium.version}</version>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
+
 
 
         <!-- Testcontainers 用于集成测试中的数据库实例 -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
-            <version>1.17.3</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- 如果需要测试数据库，可以添加对应的模块，如 MySQL -->
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>mysql</artifactId>
-            <version>1.17.3</version>
+            <version>1.20.4</version>
             <scope>test</scope>
         </dependency>
 
