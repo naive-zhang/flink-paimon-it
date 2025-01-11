@@ -59,6 +59,36 @@ public class BasicMySQLCdcWithDockerComposeTestSuite extends PaimonBasicTestSuit
             System.out.println("使用外部docker-compose启动的MySQL");
             init();
         }
+        registerCdcTable();
+    }
+
+    public void registerCdcTable() {
+        tableEnv.executeSql("create database if not exists default_catalog.test");
+        tableEnv.executeSql("CREATE TABLE default_catalog.test.products (\n" +
+                " id INT NOT NULL,\n" +
+                " name STRING,\n" +
+                " description STRING,\n" +
+                " weight DECIMAL(10,3),\n" +
+                " PRIMARY KEY (id) NOT ENFORCED\n" +
+                ") WITH (\n" +
+                " 'connector' = 'mysql-cdc',\n" +
+                " 'scan.startup.mode' = 'earliest-offset',\n" +
+                " 'server-time-zone' = 'UTC',\n" +
+                " 'server-id' = '5400-5404',\n" +
+                " 'hostname' = '" + mappedHost + "',\n" +
+                " 'port' = '" + mappedPort + "',\n" +
+                " 'username' = '" + JDBC_USER + "',\n" +
+                " 'password' = '" + JDBC_PASS + "',\n" +
+                " 'database-name' = 'inventory',\n" +
+                " 'table-name' = 'products'\n" +
+                ")").print();
+    }
+
+    @Test
+    public void testQueryFromCdcTable() {
+        tableEnv.sqlQuery("select * from default_catalog.test.products")
+                .execute()
+                .print();
     }
 
     @Test

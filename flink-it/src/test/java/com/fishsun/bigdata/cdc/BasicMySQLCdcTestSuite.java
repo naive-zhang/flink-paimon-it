@@ -23,4 +23,10 @@ public class BasicMySQLCdcTestSuite extends BasicMySQLCdcWithDockerComposeTestSu
     public void testFlinkCdcIntegration() throws Exception {
         super.testFlinkCdcIntegration();
     }
+
+    @Test
+    @Override
+    public void testQueryFromCdcTable() {
+        super.testQueryFromCdcTable();
+    }
 }
