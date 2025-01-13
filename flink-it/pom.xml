@@ -24,6 +24,27 @@
     </properties>
 
     <dependencies>
+
+        <!-- flink hive catalog it -->
+
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-exec</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-sql-connector-hive-2.3.9_2.12</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr-runtime</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- Flink Dependencies -->
         <dependency>
             <groupId>org.apache.flink</groupId>

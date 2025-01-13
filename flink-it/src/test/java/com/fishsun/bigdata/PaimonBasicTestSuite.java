@@ -10,6 +10,7 @@ import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.api.Schema;
 import org.apache.flink.table.api.TableDescriptor;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
+import org.apache.flink.table.catalog.hive.HiveCatalog;
 import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,7 @@ public class PaimonBasicTestSuite {
     protected StreamExecutionEnvironment env;
     protected StreamTableEnvironment tableEnv;
     protected long checkpointInterval;
+    protected HiveCatalog hiveCatalog;
 
     @Before
     public void setUp() {
@@ -53,8 +55,11 @@ public class PaimonBasicTestSuite {
                 .option(DataGenConnectorOptions.ROWS_PER_SECOND, 100L)
                 .build());
         registerDataGen();
+        registerHiveCatalog();
         registerPaimonCatalog();
     }
+
+    public void registerHiveCatalog() {}
 
     public void registerDataGen() {
         tableEnv.executeSql("create database test");
