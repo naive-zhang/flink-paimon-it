@@ -10,3 +10,5 @@ tmp/*
 logs
 py/*.json
 metastore_db
+*/dependency-reduced-pom.xml
+*.jar
