@@ -12,6 +12,7 @@
     <modules>
         <module>flink-it</module>
         <module>hive-it</module>
+        <module>spark-it</module>
     </modules>
 
     <properties>
@@ -40,6 +41,10 @@
         <cdc.flink.version>2.3.0</cdc.flink.version>
         <debezium.version>1.9.7.Final</debezium.version>
         <testcontainer.version>1.20.4</testcontainer.version>
+        <!-- 使用对应的 Spark 3.2.x 版本 -->
+        <spark.version>3.2.4</spark.version>
+        <!-- Scala 2.12 与 Spark 3.2.x 对应 -->
+        <scala.binary.version>2.12</scala.binary.version>
     </properties>
 
     <profiles>
@@ -321,6 +326,41 @@
                 <artifactId>testcontainers</artifactId>
                 <version>${testcontainer.version}</version>
             </dependency>
+
+            <!-- spark -->
+            <dependency>
+                <groupId>org.apache.spark</groupId>
+                <artifactId>spark-core_${scala.binary.version}</artifactId>
+                <version>${spark.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <!-- Spark SQL -->
+            <dependency>
+                <groupId>org.apache.spark</groupId>
+                <artifactId>spark-sql_${scala.binary.version}</artifactId>
+                <version>${spark.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <!-- spark hive -->
+            <dependency>
+                <groupId>org.apache.spark</groupId>
+                <artifactId>spark-hive_2.12</artifactId>
+                <version>${spark.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <!-- Paimon Spark 3.2 依赖 -->
+            <dependency>
+                <groupId>org.apache.paimon</groupId>
+                <artifactId>paimon-spark-3.2</artifactId>
+                <version>${paimon.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <!-- 如果需要使用 Hive Catalog，需要包含 paimon-hive -->
+<!--            <dependency>-->
+<!--                <groupId>org.apache.paimon</groupId>-->
+<!--                <artifactId>paimon-hive</artifactId>-->
+<!--                <version>${paimon.version}</version>-->
+<!--            </dependency>-->
 
 
         </dependencies>
