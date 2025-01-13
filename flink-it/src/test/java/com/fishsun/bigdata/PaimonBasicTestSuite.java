@@ -54,15 +54,21 @@ public class PaimonBasicTestSuite {
                         .build())
                 .option(DataGenConnectorOptions.ROWS_PER_SECOND, 100L)
                 .build());
-        registerDataGen();
         registerHiveCatalog();
         registerPaimonCatalog();
+        registerDataGen();
+        registerPaimonHiveCatalog();
     }
 
-    public void registerHiveCatalog() {}
+    public void registerPaimonHiveCatalog() {
+    }
+
+    public void registerHiveCatalog() {
+    }
 
     public void registerDataGen() {
-        tableEnv.executeSql("create database test");
+        tableEnv.executeSql("use catalog default_catalog");
+        tableEnv.executeSql("create database  if not exists test");
         tableEnv.executeSql("CREATE TABLE if not exists default_catalog.test.datagen1 (\n" +
                 "  `id` Int PRIMARY KEY NOT ENFORCED,\n" +
                 "  `name` String,\n" +

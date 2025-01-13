@@ -16,8 +16,8 @@ public class FileUtils {
 
     public static String getHiveConfDir(boolean normalize) {
         Path path = Paths.get("../conf");
-        return normalize ? normalize(path.normalize().toString()) :
-                path.normalize().toString();
+        return normalize ? normalize(path.normalize().toAbsolutePath().toString()) :
+                path.normalize().toAbsolutePath().toString();
     }
 
     public static String getPipelineIOCachePath() {
