@@ -27,13 +27,20 @@ public class SparkPaimonHiveCatalogApp {
          // 也可以查看所有表
           spark.sql("SHOW TABLES in paimon_test").show();
 
+          // 查询表结构
+        System.out.println(spark.sql("show create table paimon_test.bucket_table").first().getString(0));
+
           // 查询表里面的数据
         spark.sql("select * from paimon_test.bucket_table").show();
 
         // 查询有多少数据
         spark.sql("select count(1) from paimon_test.bucket_table").show();
         // 查询快照数据
-        spark.sql("select * from paimon_incremental_query(paimon_test.bucket_table,1,2)").show();
+        spark.sql("select * from paimon_test.bucket_table VERSION AS OF 1;").show();
+        spark.sql("select * from paimon_test.bucket_table VERSION AS OF 6;").show();
+        // 尝试增量读取
+        spark.sql("select * from paimon_incremental_query('paimon_test.bucket_table', 1, 6)").show();
+//        spark.sql("select * from paimon_incremental_query(paimon_test.bucket_table,1,2)").show();
          // 更多操作例如创建表、写入数据、查询等:
          // spark.sql("CREATE TABLE paimon.default.my_table (id INT, name STRING) USING paimon");
          // spark.sql("INSERT INTO paimon.default.my_table VALUES (1, 'Alice'), (2, 'Bob')");

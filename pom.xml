@@ -55,16 +55,16 @@
                 <spark.version>3.2.3</spark.version>
                 <spark.major.version>3.2</spark.major.version>
             </properties>
+        </profile>
+        <profile>
+            <id>spark-3.5</id>
+            <properties>
+                <spark.version>3.5.1</spark.version>
+                <spark.major.version>3.5</spark.major.version>
+            </properties>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
-        </profile>
-        <profile>
-            <id>spark-3.3</id>
-            <properties>
-                <spark.version>3.3.2</spark.version>
-                <spark.major.version>3.3</spark.major.version>
-            </properties>
         </profile>
         <profile>
             <id>flink-1.15</id>
