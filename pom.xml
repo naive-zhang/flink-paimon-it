@@ -42,12 +42,30 @@
         <debezium.version>1.9.7.Final</debezium.version>
         <testcontainer.version>1.20.4</testcontainer.version>
         <!-- 使用对应的 Spark 3.2.x 版本 -->
-        <spark.version>3.2.4</spark.version>
+        <spark.version>3.2.3</spark.version>
+        <spark.major.version>3.2</spark.major.version>
         <!-- Scala 2.12 与 Spark 3.2.x 对应 -->
         <scala.binary.version>2.12</scala.binary.version>
     </properties>
 
     <profiles>
+        <profile>
+            <id>spark-3.2</id>
+            <properties>
+                <spark.version>3.2.3</spark.version>
+                <spark.major.version>3.2</spark.major.version>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <id>spark-3.3</id>
+            <properties>
+                <spark.version>3.3.2</spark.version>
+                <spark.major.version>3.3</spark.major.version>
+            </properties>
+        </profile>
         <profile>
             <id>flink-1.15</id>
             <properties>
@@ -61,6 +79,9 @@
                 <flink.version>1.17.2</flink.version>
                 <flink.major.version>1.17</flink.major.version>
             </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
         </profile>
         <profile>
             <id>flink-1.19</id>
@@ -333,6 +354,12 @@
                 <artifactId>spark-core_${scala.binary.version}</artifactId>
                 <version>${spark.version}</version>
                 <scope>provided</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <!-- Spark SQL -->
             <dependency>
@@ -351,7 +378,7 @@
             <!-- Paimon Spark 3.2 依赖 -->
             <dependency>
                 <groupId>org.apache.paimon</groupId>
-                <artifactId>paimon-spark-3.2</artifactId>
+                <artifactId>paimon-spark-${spark.major.version}</artifactId>
                 <version>${paimon.version}</version>
                 <scope>compile</scope>
             </dependency>
