@@ -31,20 +31,32 @@ public class SparkPaimonHiveCatalogApp {
         System.out.println(spark.sql("show create table paimon_test.bucket_table").first().getString(0));
 
           // 查询表里面的数据
-        spark.sql("select * from paimon_test.bucket_table").show();
+        // spark.sql("select * from paimon_test.bucket_table").show();
 
         // 查询有多少数据
         spark.sql("select count(1) from paimon_test.bucket_table").show();
         // 查询快照数据
-        spark.sql("select * from paimon_test.bucket_table VERSION AS OF 1;").show();
-        spark.sql("select * from paimon_test.bucket_table VERSION AS OF 6;").show();
+        // spark.sql("select * from paimon_test.bucket_table VERSION AS OF 1;").show();
+        // spark.sql("select * from paimon_test.bucket_table VERSION AS OF 2;").show();
         // 尝试增量读取
-        spark.sql("select * from paimon_incremental_query('paimon_test.bucket_table', 1, 6)").show();
+        spark.sql("select * from paimon_incremental_query('paimon_test.bucket_table', '2025-01-14 21', '2025-01-14 22')").show();
 //        spark.sql("select * from paimon_incremental_query(paimon_test.bucket_table,1,2)").show();
-         // 更多操作例如创建表、写入数据、查询等:
-         // spark.sql("CREATE TABLE paimon.default.my_table (id INT, name STRING) USING paimon");
-         // spark.sql("INSERT INTO paimon.default.my_table VALUES (1, 'Alice'), (2, 'Bob')");
-         // spark.sql("SELECT * FROM paimon.default.my_table").show();
+
+        // snapshot表
+        spark.sql("select * from paimon_test.`bucket_table$snapshots`;").show();
+
+        // schema表
+        spark.sql("select * from paimon_test.`bucket_table$schemas`;").show();
+
+        // tag表
+        spark.sql("select * from paimon_test.`bucket_table$tags` order by commit_time;").show();
+
+        // 审计表
+        spark.sql("select * from paimon_test.`bucket_table$audit_log` where rowkind <> '+I';").show();
+        spark.sql("select id, count(1) as cnt " +
+                "from paimon_test.`bucket_table$audit_log` " +
+                "group by id " +
+                "order by cnt desc;").show();
 
          // 结束 Spark
          spark.stop();

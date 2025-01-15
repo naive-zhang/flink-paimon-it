@@ -21,9 +21,9 @@ public class PaimonHiveCatalogTestSuite extends HiveCatalogTestSuite {
     public void testPaimonHiveCatalog() throws ExecutionException, InterruptedException, DatabaseNotExistException {
         registerDataGenInHiveCatalog();
         tableEnv.executeSql("use catalog mypaimon;");
-//        System.out.println(FileUtils.getLakehouseDefaultPath() + "/paimon_test.db");
-//        FileUtils.clearDir(FileUtils.getLakehouseDefaultPath() + "/paimon_test.db", false);
-//        tableEnv.executeSql("drop database if  exists paimon_test");
+        System.out.println(FileUtils.getLakehouseDefaultPath() + "/paimon_test.db");
+        FileUtils.clearDir(FileUtils.getLakehouseDefaultPath() + "/paimon_test.db", false);
+        tableEnv.executeSql("drop database if  exists paimon_test");
         tableEnv.executeSql("create database if not exists paimon_test");
         tableEnv.executeSql("CREATE TABLE if not exists mypaimon.paimon_test.bucket_table (\n" +
                 "  `id` Int PRIMARY KEY NOT ENFORCED,\n" +
@@ -32,6 +32,14 @@ public class PaimonHiveCatalogTestSuite extends HiveCatalogTestSuite {
                 "  `create_time` Timestamp\n" +
                 ") with  (\n" +
                 " 'bucket' = '-1',\n" +
+                " 'changelog-producer' = 'input',\n" +
+                " 'snapshot.num-retained.min' = '6',\n" +
+                " 'snapshot.num-retained.max' = '18',\n" +
+                " 'snapshot.time-retained' = '2min',\n" +
+                " 'tag.automatic-creation' = 'process-time',\n" +
+                " 'tag.creation-delay' = '600000',\n" +
+                " 'tag.creation-period' = 'hourly',\n" +
+                " 'tag.num-retained-max' = '90',\n" +
                 " 'sink.parallelism' = '1' \n" +
                 ");");
         String sql = "insert into mypaimon.paimon_test.bucket_table(id, name, age, create_time) " +
