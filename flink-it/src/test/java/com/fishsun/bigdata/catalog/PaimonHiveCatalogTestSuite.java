@@ -21,18 +21,18 @@ public class PaimonHiveCatalogTestSuite extends HiveCatalogTestSuite {
     public void testPaimonHiveCatalog() throws ExecutionException, InterruptedException, DatabaseNotExistException {
         registerDataGenInHiveCatalog();
         tableEnv.executeSql("use catalog mypaimon;");
-        System.out.println(FileUtils.getLakehouseDefaultPath() + "/paimon_test.db");
-        FileUtils.clearDir(FileUtils.getLakehouseDefaultPath() + "/paimon_test.db", false);
-        tableEnv.executeSql("drop database if  exists paimon_test");
+//        System.out.println(FileUtils.getLakehouseDefaultPath() + "/paimon_test.db");
+//        FileUtils.clearDir(FileUtils.getLakehouseDefaultPath() + "/paimon_test.db", false);
+//        tableEnv.executeSql("drop database if  exists paimon_test");
         tableEnv.executeSql("create database if not exists paimon_test");
-        tableEnv.executeSql("CREATE TABLE if not exists mypaimon.paimon_test.bucket_table (\n" +
+        tableEnv.executeSql("CREATE TABLE if not exists mypaimon.paimon_test.bucket_table_flink (\n" +
                 "  `id` Int PRIMARY KEY NOT ENFORCED,\n" +
                 "  `name` String,\n" +
                 "  `age` Int,\n" +
                 "  `create_time` Timestamp\n" +
                 ") with  (\n" +
                 " 'bucket' = '-1',\n" +
-                " 'changelog-producer' = 'input',\n" +
+                " 'changelog-producer' = 'lookup',\n" +
                 " 'snapshot.num-retained.min' = '6',\n" +
                 " 'snapshot.num-retained.max' = '18',\n" +
                 " 'snapshot.time-retained' = '2min',\n" +
@@ -42,8 +42,8 @@ public class PaimonHiveCatalogTestSuite extends HiveCatalogTestSuite {
                 " 'tag.num-retained-max' = '90',\n" +
                 " 'sink.parallelism' = '1' \n" +
                 ");");
-        String sql = "insert into mypaimon.paimon_test.bucket_table(id, name, age, create_time) " +
-                "select id, name, age, create_time from myhive.test.datagen1";
+        String sql = "insert into mypaimon.paimon_test.bucket_table2(id, name, age, create_time,dt) " +
+                "select cast(id as string), name, age, create_time, cast(create_time as date) from myhive.test.datagen1";
         System.out.println(sql);
         tableEnv.executeSql(sql)
                 .await();

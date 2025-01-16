@@ -45,12 +45,12 @@ public class HiveCatalogTestSuite extends PaimonBasicTestSuite {
                 "'connector' = 'datagen',\n" +
                 "'fields.id.kind' = 'random',\n" +
                 "'fields.id.min' = '1',\n" +
-                "'fields.id.max' = '1000',\n" +
+                "'fields.id.max' = '20',\n" +
                 "'fields.name.length' = '10',\n" +
                 "'fields.age.min' = '18',\n" +
                 "'fields.age.max' = '60',\n" +
-//                "'number-of-rows' = '20',\n" +
-                "'rows-per-second' = '1'\n" +
+                "'number-of-rows' = '20',\n" +
+                "'rows-per-second' = '20'\n" +
                 ");");
         Assert.assertTrue( hiveCatalog.listDatabases().contains("test"));
         Assert.assertTrue(hiveCatalog.listTables("test").contains("datagen1"));
