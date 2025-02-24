@@ -1,0 +1,28 @@
+version: '3'
+services:
+  mysql:
+    image: m.daocloud.io/docker.io/library/mysql:5.7
+    container_name: mysql_local
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: metastore_db
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+    ports:
+      - "3310:3306"
+
+  hive-metastore:
+    image: m.daocloud.io/docker.io/apache/hive:3.1.2
+    container_name: hive_metastore
+    environment:
+      SERVICE_NAME: metastore
+      DB_DRIVER: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: metastore_db
+    depends_on:
+      - mysql
+    ports:
+      - "9083:9083"

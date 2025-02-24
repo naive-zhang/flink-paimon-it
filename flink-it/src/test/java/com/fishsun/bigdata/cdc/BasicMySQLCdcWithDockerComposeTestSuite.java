@@ -1,6 +1,7 @@
 package com.fishsun.bigdata.cdc;
 
 import com.fishsun.bigdata.PaimonBasicTestSuite;
+import com.fishsun.bigdata.catalog.HiveCatalogTestSuite;
 import com.ververica.cdc.connectors.mysql.table.StartupOptions;
 import com.ververica.cdc.debezium.JsonDebeziumDeserializationSchema;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
@@ -15,15 +16,15 @@ import com.ververica.cdc.connectors.mysql.source.MySqlSource;
 import java.io.File;
 
 
-public class BasicMySQLCdcWithDockerComposeTestSuite extends PaimonBasicTestSuite {
+public class BasicMySQLCdcWithDockerComposeTestSuite extends HiveCatalogTestSuite {
     protected static boolean USING_INTERNAL_DOCKER_COMPOSE = true;
     private DockerComposeContainer<?> composeContainer;
     public String jdbcUrl;
     private static final String SERVICE_NAME = "mysql";
     private static final int MYSQL_PORT = 3306;
     private static final String DBNAME = "inventory";
-    private static final String JDBC_USER = "root";
-    private static final String JDBC_PASS = "123456";
+    protected static final String JDBC_USER = "root";
+    protected static final String JDBC_PASS = "123456";
     public String tableName = "products";
     public String mappedHost;
     public int mappedPort;

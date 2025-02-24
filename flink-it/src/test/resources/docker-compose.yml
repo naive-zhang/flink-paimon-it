@@ -2,9 +2,12 @@ version: '2.1'
 services:
   mysql:
     image: debezium/example-mysql:1.1
+    volumes:
+      - ./inventory.sql:/docker-entrypoint-initdb.d/inventory.sql
     ports:
       - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=123456
       - MYSQL_USER=mysqluser
       - MYSQL_PASSWORD=mysqlpw
+      - TZ=Asia/Shanghai

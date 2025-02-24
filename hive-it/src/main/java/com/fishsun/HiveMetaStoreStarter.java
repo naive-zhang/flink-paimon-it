@@ -2,12 +2,16 @@ package com.fishsun;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class HiveMetaStoreStarter {
+
+    public static Logger logger = LoggerFactory.getLogger(HiveMetaStoreStarter.class);
 
     public static void main(String[] args) {
         try {
@@ -41,6 +45,7 @@ public class HiveMetaStoreStarter {
             File outFile = new File("conf/hive-site.xml");
             try (FileOutputStream fos = new FileOutputStream(outFile)) {
                 hiveConf.writeXml(fos);
+                logger.info("成功将配置信息写入: {}", outFile.getAbsolutePath());
                 System.out.println("成功将配置信息写入 " + outFile.getAbsolutePath());
             } catch (IOException e) {
                 e.printStackTrace();
@@ -49,7 +54,7 @@ public class HiveMetaStoreStarter {
             // 启动 Hive MetaStore 服务
             // 注意，这里使用了带 (port, bridge, conf) 的签名
             HiveMetaStore.startMetaStore(9083, null, hiveConf);
-
+            logger.info("HiveMetaStore 已启动，监听端口: {}", 9083);
             System.out.println("HiveMetaStore 已启动，监听端口: " + 9083);
 
             // 保持主线程运行，以保持MetaStore服务持续运行

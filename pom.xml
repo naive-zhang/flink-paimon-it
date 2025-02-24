@@ -10,6 +10,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>docker-hive-it</module>
         <module>flink-it</module>
         <module>hive-it</module>
         <module>spark-it</module>
