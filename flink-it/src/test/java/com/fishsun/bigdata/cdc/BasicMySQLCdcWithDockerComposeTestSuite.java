@@ -74,7 +74,7 @@ public class BasicMySQLCdcWithDockerComposeTestSuite extends HiveCatalogTestSuit
                 ") WITH (\n" +
                 " 'connector' = 'mysql-cdc',\n" +
                 " 'scan.startup.mode' = 'earliest-offset',\n" +
-                " 'server-time-zone' = 'UTC',\n" +
+                " 'server-time-zone' = 'Asia/Shanghai',\n" +
                 " 'server-id' = '5400-5404',\n" +
                 " 'hostname' = '" + mappedHost + "',\n" +
                 " 'port' = '" + mappedPort + "',\n" +

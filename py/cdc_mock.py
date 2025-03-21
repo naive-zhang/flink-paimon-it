@@ -62,12 +62,13 @@ def generate_initial_data(num_records=100):
         address = random_string(50) if random.random() > 0.5 else None  # 50% 几率 NULL
         details = json.dumps({'hobbies': random.sample(['reading', 'sports', 'music', 'travel'], 2)}) if random.random() > 0.4 else None
         last_login = random_datetime() if random.random() > 0.2 else None  # 20% 几率 NULL
+        created_at = random_date(datetime.date(2025, 3, 1), datetime.date(2025, 3, 8))
 
         sql = """
-        INSERT INTO user_profile (name, age, gender, birthday, balance, address, details, last_login)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO user_profile (name, age, gender, birthday, balance, address, details, last_login, created_at)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        cursor.execute(sql, (name, age, gender, birthday, balance, address, details, last_login))
+        cursor.execute(sql, (name, age, gender, birthday, balance, address, details, last_login, created_at))
     conn.commit()
     print(f"Inserted {num_records} initial records.")
 
@@ -85,12 +86,13 @@ def simulate_incremental_operations(num_operations=50):
             address = random_string(50)
             details = json.dumps({'hobbies': random.sample(['reading', 'sports', 'music', 'travel'], 2)})
             last_login = random_datetime()
+            created_at = random_date(datetime.date(2025, 3, 1), datetime.date(2025, 3, 8))
 
             sql = """
-            INSERT INTO user_profile (name, age, gender, birthday, balance, address, details, last_login)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO user_profile (name, age, gender, birthday, balance, address, details, last_login, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
-            cursor.execute(sql, (name, age, gender, birthday, balance, address, details, last_login))
+            cursor.execute(sql, (name, age, gender, birthday, balance, address, details, last_login, created_at))
             print("Inserted a new record.")
 
         elif operation == 'update':
@@ -121,7 +123,7 @@ def simulate_incremental_operations(num_operations=50):
 # 主函数
 if __name__ == "__main__":
     # 生成存量数据
-    # generate_initial_data(100)
+    generate_initial_data(1000)
 
     # 模拟增量操作
     simulate_incremental_operations(50)

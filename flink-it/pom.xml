@@ -20,6 +20,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <java.version>1.8</java.version>
+        <project.scope>compile</project.scope>
 
     </properties>
 
@@ -30,7 +31,7 @@
         <dependency>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-exec</artifactId>
-            <scope>provided</scope>
+            <scope>${project.scope}</scope>
         </dependency>
 
         <dependency>
@@ -42,109 +43,109 @@
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr-runtime</artifactId>
-            <scope>provided</scope>
+            <scope>${project.scope}</scope>
         </dependency>
 
         <!-- Flink Dependencies -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-streaming-java</artifactId>
-            <scope>provided</scope>
+            <scope>${project.scope}</scope>
             <classifier>tests</classifier>
         </dependency>
 
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-runtime</artifactId>
-            <scope>provided</scope>
+            <scope>${project.scope}</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-clients</artifactId>
-            <scope>provided</scope>
+            <scope>${project.scope}</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-java</artifactId>
-            <scope>provided</scope>
+            <scope>${project.scope}</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-json</artifactId>
-            <scope>provided</scope>
+            <scope>${project.scope}</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-csv</artifactId>
-            <scope>provided</scope>
+            <scope>${project.scope}</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-files</artifactId>
-            <scope>provided</scope>
+            <scope>${project.scope}</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-api-java</artifactId>
-            <scope>provided</scope>
+            <scope>${project.scope}</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-runtime</artifactId>
-            <scope>provided</scope>
+            <scope>${project.scope}</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-common</artifactId>
-            <scope>provided</scope>
+            <scope>${project.scope}</scope>
         </dependency>
 
         <!-- hadoop dept for flink side -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-shaded-hadoop-2-uber</artifactId>
-            <scope>provided</scope>
+            <scope>${project.scope}</scope>
         </dependency>
 
         <!-- flink runtime dept for local web -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-runtime-web</artifactId>
-            <scope>provided</scope>
+            <scope>${project.scope}</scope>
         </dependency>
 
         <!-- log dept -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-1.2-api</artifactId>
-            <scope>provided</scope>
+            <scope>${project.scope}</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <scope>provided</scope>
+            <scope>${project.scope}</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <scope>provided</scope>
+            <scope>${project.scope}</scope>
         </dependency>
 
         <!-- Paimon Dependencies -->
         <dependency>
             <groupId>org.apache.paimon</groupId>
             <artifactId>paimon-flink-${flink.major.version}</artifactId>
-            <scope>provided</scope>
+            <scope>${project.scope}</scope>
         </dependency>
 
         <!-- SLF4J (Logging) -->
@@ -192,7 +193,7 @@
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-shaded-guava</artifactId>
-            <scope>test</scope>
+            <scope>${project.scope}</scope>
         </dependency>
 
         <dependency>
@@ -210,7 +211,7 @@
                     <artifactId>flink-shaded-guava</artifactId>
                 </exclusion>
             </exclusions>
-            <scope>test</scope>
+            <scope>${project.scope}</scope>
         </dependency>
 
 

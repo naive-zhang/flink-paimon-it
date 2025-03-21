@@ -64,4 +64,12 @@ public class BasicMySQLCdcTestSuite extends BasicMySQLCdcWithDockerComposeTestSu
                 .execute()
                 .print();
     }
+
+
+    @Test
+    public void testIsHiveAvailable() {
+        tableEnv.executeSql("use catalog myhive");
+        tableEnv.executeSql("show databases")
+                .print();
+    }
 }

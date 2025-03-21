@@ -20,6 +20,7 @@ public class HiveCatalogTestSuite extends PaimonBasicTestSuite {
         tableEnv.registerCatalog("myhive", hiveCatalog);
 // set the HiveCatalog as the current catalog of the session
         tableEnv.useCatalog("myhive");
+        tableEnv.executeSql("create database if not exists paimon_ods");
     }
 
     @Test
