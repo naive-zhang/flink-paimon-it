@@ -3,7 +3,6 @@ import string
 import datetime
 import json
 import pymysql
-from matplotlib.backend_tools import cursors
 
 # 数据库连接配置
 db_config = {

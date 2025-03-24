@@ -10,7 +10,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>docker-hive-it</module>
+        <module>paimon-common</module>
         <module>flink-it</module>
         <module>hive-it</module>
         <module>spark-it</module>
@@ -96,6 +96,21 @@
     <dependencyManagement>
 
         <dependencies>
+
+            <!-- scala lang -->
+            <dependency>
+                <groupId>org.scala-lang</groupId>
+                <artifactId>scala-library</artifactId>
+                <version>2.12.15</version>
+            </dependency>
+
+            <!-- mysql jdbc connector -->
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>8.0.33</version>
+            </dependency>
+
             <!-- hive  datanucleus -->
             <dependency>
                 <groupId>org.datanucleus</groupId>
