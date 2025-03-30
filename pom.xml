@@ -10,7 +10,6 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>paimon-common</module>
         <module>flink-it</module>
         <module>hive-it</module>
         <module>spark-it</module>

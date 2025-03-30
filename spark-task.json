@@ -1,0 +1,21 @@
+{
+  "app.name": "Spark Paimon with Hive Catalog",
+  "master": "local[1]",
+  "spark.sql.catalog.paimon.warehouse": "file:///Users/zhangxinsen/workspace/ane/flink-paimon-it/lakehouse",
+  "spark.sql.catalog.paimon.uri": "thrift://localhost:9083",
+  "sys_name": "local",
+  "db_name": "test",
+  "table_name": "user_profile",
+  "partition_source": "created_at",
+  "pk": "id, dt",
+  "meta_timestamp": "updated_at",
+  "url": "jdbc:mysql://localhost:3306/inventory",
+  "username": "root",
+  "password": "123456",
+  "table": "(select * from user_profile where updated_at >= '2024-01-01' and updated_at < '2025-03-01') t",
+  "db_table": "user_profile",
+  "partition_column": "updated_at",
+  "lower_bound": "2024-01-01",
+  "upper_bound": "2025-03-31",
+  "num_partitions": "500"
+}

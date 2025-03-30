@@ -72,4 +72,47 @@ public class BasicMySQLCdcTestSuite extends BasicMySQLCdcWithDockerComposeTestSu
         tableEnv.executeSql("show databases")
                 .print();
     }
+
+    @Test
+    public void testQueryFromPaimonTable() {
+        tableEnv.sqlQuery(
+                        "select * from mypaimon.paimon_ods.ods_xxx_user_profile /*+ OPTIONS('scan.parallelism' = '1') */;")
+                .execute()
+                .print();
+    }
+
+    @Test
+    public void testInsertIntoPaimonTableFromCdc() {
+        tableEnv.executeSql("create database if not exists myhive.test");
+        tableEnv.executeSql("drop table if exists myhive.test.user_profile");
+        tableEnv.executeSql("CREATE TABLE IF NOT EXISTS myhive.test.user_profile (\n" +
+                " id INT NOT NULL,\n" +
+                " name STRING,\n" +
+                " age int,\n" +
+                " gender STRING,\n" +
+                " birthday date,\n" +
+                " balance decimal(10, 2),\n" +
+                " address string,\n" +
+                " details string,\n" +
+                " created_at TIMESTAMP,\n" +
+                " updated_at TIMESTAMP,\n" +
+                " last_login TIMESTAMP,\n" +
+                " PRIMARY KEY (id) NOT ENFORCED\n" +
+                ") WITH (\n" +
+                " 'connector' = 'mysql-cdc',\n" +
+                " 'scan.startup.mode' = 'earliest-offset',\n" +
+                " 'server-time-zone' = 'Asia/Shanghai',\n" +
+                //                " 'server-time-zone' = 'GMT+08:00',\n" +
+                " 'server-id' = '5404-5408',\n" +
+                " 'hostname' = '" + mappedHost + "',\n" +
+                " 'port' = '" + mappedPort + "',\n" +
+                " 'username' = '" + JDBC_USER + "',\n" +
+                " 'password' = '" + JDBC_PASS + "',\n" +
+                " 'database-name' = 'inventory',\n" +
+                " 'table-name' = 'user_profile'\n" +
+                ")").print();
+        tableEnv.executeSql("insert into mypaimon.paimon_ods.ods_xxx_user_profile " +
+                        "select id, name, age, gender, birthday, balance, address, details, created_at, updated_at, last_login, cast(created_at as date) as dt  from myhive.test.user_profile")
+                .print();
+    }
 }

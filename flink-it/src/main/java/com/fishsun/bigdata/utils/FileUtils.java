@@ -32,10 +32,11 @@ public class FileUtils {
     }
 
     public static String getLakehouseDefaultPath(boolean normalized) {
-        Path path = Paths.get("");
-        String lakehousePath = path.toAbsolutePath() + "/lakehouse";
-        return normalized ? normalize(Paths.get(lakehousePath).normalize().toString()) :
-                Paths.get(lakehousePath).normalize().toString();
+        // Path path = Paths.get("");
+        // String lakehousePath = path.toAbsolutePath() + "/lakehouse";
+        // return normalized ? normalize(Paths.get(lakehousePath).normalize().toString()) :
+        //         Paths.get(lakehousePath).normalize().toString();
+        return "/Users/zhangxinsen/workspace/ane/flink-paimon-it/lakehouse";
     }
 
     public static String getCheckpointPath(boolean normalized) {

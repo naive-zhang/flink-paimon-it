@@ -1,16 +1,33 @@
 package com.fishsun.utils;
 
 import com.fishsun.conf.JdbcReadConf;
+import com.fishsun.conf.PaimonTableConf;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-import org.apache.spark.sql.types.*;
+import org.apache.spark.sql.types.DataType;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.MetadataBuilder;
+import org.apache.spark.sql.types.StructField;
 
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 public class SchemaUtils {
     public static final String DEFAULT_PARTITION_COLUMN_NAME = "dt";
+    public static final String MQ_PARTITION_INDEX_KEY = "partition_index";
+    public static final String MQ_PARTITION_OFFSET_KEY = "offset";
+    public static final String MQ_META_TIMESTAMP_KEY = "meta_timestamp";
+    public static final String IS_CDC_DELETE_KEY = "is_cdc_delete";
 
     public static DataType toPaimonDataType(DataType dataType) {
         if (dataType == DataTypes.TimestampType) {
@@ -85,12 +102,13 @@ public class SchemaUtils {
      * @param paimonSchema
      * @return
      */
-    private static StructField findPartitionColumn(List<StructField> paimonSchema, JdbcReadConf jdbcReadConf) {
+    private static StructField findPartitionColumn(List<StructField> paimonSchema, PaimonTableConf paimonTableConf) {
         Optional<StructField> partitionField = paimonSchema.stream().filter(
-                x -> x.name().equals(jdbcReadConf.getPartitionFromColumn())
+                x -> x.name().equals(paimonTableConf.getPartitionFromColumn())
         ).findFirst();
         if (!partitionField.isPresent()) {
-            throw new IllegalArgumentException("partition field not found, " + jdbcReadConf.getPartitionFromColumn());
+            throw new IllegalArgumentException(
+                    "partition field not found, " + paimonTableConf.getPartitionFromColumn());
         }
         return partitionField.get();
     }
@@ -100,12 +118,15 @@ public class SchemaUtils {
      * 如果分区不存在则抛出异常
      * 如果分区存在并且类型不是时间类型, 则直接写入即可
      * 否则用dt分区
+     * 同时注入 partitionIdx和 offset这两个辅助字段
      *
      * @param paimonSchema
      * @param jdbcReadConf
+     * @param paimonTableConf
      * @return
      */
-    public static List<StructField> injectSchema(List<StructField> paimonSchema, JdbcReadConf jdbcReadConf) {
+    public static List<StructField> injectSchema(List<StructField> paimonSchema, JdbcReadConf jdbcReadConf,
+                                                 PaimonTableConf paimonTableConf) {
         Map<String, String> tableComment = getTableComment(jdbcReadConf);
         List<StructField> newPaimonSchema = paimonSchema.stream().map(
                 structField -> new StructField(
@@ -117,10 +138,7 @@ public class SchemaUtils {
                                 .build()
                 )
         ).collect(Collectors.toList());
-        if (!jdbcReadConf.getIsPartitionTable()) {
-            return newPaimonSchema;
-        }
-        StructField partitionField = findPartitionColumn(newPaimonSchema, jdbcReadConf);
+        StructField partitionField = findPartitionColumn(newPaimonSchema, paimonTableConf);
         if (partitionField.dataType() == DataTypes.TimestampNTZType) {
             newPaimonSchema.add(new StructField(
                     DEFAULT_PARTITION_COLUMN_NAME,
@@ -131,13 +149,65 @@ public class SchemaUtils {
                             .build()
             ));
         }
+        newPaimonSchema.add(new StructField(
+                MQ_PARTITION_INDEX_KEY,
+                DataTypes.LongType,
+                true,
+                new MetadataBuilder()
+                        .putString("comment", "mq 中分区号")
+                        .build()
+        ));
+        newPaimonSchema.add(new StructField(
+                MQ_PARTITION_OFFSET_KEY,
+                DataTypes.LongType,
+                true,
+                new MetadataBuilder()
+                        .putString("comment", "mq 中offset")
+                        .build()
+        ));
+        newPaimonSchema.add(new StructField(
+                MQ_META_TIMESTAMP_KEY,
+                DataTypes.TimestampNTZType,
+                true,
+                new MetadataBuilder()
+                        .putString("comment", "mq 写入时间")
+                        .build()
+        ));
+        newPaimonSchema.add(new StructField(
+                IS_CDC_DELETE_KEY,
+                DataTypes.BooleanType,
+                true,
+                new MetadataBuilder()
+                        .putString("comment", "cdc中是否捕获到物理删除")
+                        .build()
+        ));
         return newPaimonSchema;
     }
 
-    public static String toDefaultPaimonTable(List<StructField> paimonSchema, JdbcReadConf jdbcReadConf) {
+    public static String genTableName(PaimonTableConf paimonTableConf) {
         StringBuilder sb = new StringBuilder();
-        sb.append("CREATE TABLE IF NOT EXISTS paimon.paimon_ods.ods_xxx_");
-        sb.append(jdbcReadConf.getDbTable());
+        sb.append("ods_");
+        sb.append(paimonTableConf.getSysName());
+        sb.append("_");
+        sb.append(paimonTableConf.getDbName());
+        sb.append("_");
+        sb.append(paimonTableConf.getTableName());
+        sb.append("_rt");
+        return sb.toString();
+    }
+
+    /**
+     * 生成对应表的 DDL
+     *
+     * @param paimonSchema
+     * @param paimonTableConf
+     * @return
+     */
+    public static String toDefaultPaimonTable(List<StructField> paimonSchema,
+                                              PaimonTableConf paimonTableConf) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("CREATE TABLE IF NOT EXISTS paimon.paimon_ods.");
+        sb.append(genTableName(paimonTableConf));
         sb.append("(\n");
         List<String> filedList = new ArrayList<>();
         for (StructField x : paimonSchema) {
@@ -154,16 +224,16 @@ public class SchemaUtils {
         sb.append(String.join(",\n", filedList));
         sb.append(")\n");
 //        sb.append("USING paimon \n");
-        StructField partitionField = findPartitionColumn(paimonSchema, jdbcReadConf);
+        StructField partitionField = findPartitionColumn(paimonSchema, paimonTableConf);
         String partitionColumnName = partitionField.dataType() != DataTypes.TimestampNTZType ? partitionField.name() : DEFAULT_PARTITION_COLUMN_NAME;
         sb.append("PARTITIONED BY (");
         sb.append(partitionColumnName);
         sb.append(") location '");
-        sb.append(FileUtils.getWarehousePath() + "/paimon_ods.db/ods_xxx_" + jdbcReadConf.getDbTable());
+        sb.append(FileUtils.getWarehousePath() + "/paimon_ods.db/" + genTableName(paimonTableConf));
         sb.append("' TBLPROPERTIES (\n");
-        if (!jdbcReadConf.getPrimaryKeys().isEmpty()) {
+        if (!paimonTableConf.getPrimaryKeys().isEmpty()) {
             sb.append("'primary-key' = '");
-            sb.append(String.join(",", jdbcReadConf.getPrimaryKeys()));
+            sb.append(String.join(",", paimonTableConf.getPrimaryKeys()));
             sb.append("',\n");
         }
         sb.append("'bucket' = '8',\n" +
@@ -176,20 +246,35 @@ public class SchemaUtils {
                 "'tag.creation-period' = 'hourly',\n" +
                 "'tag.num-retained-max' = '90'\n" +
                 ")");
-        /**
-         * "PARTITIONED BY (dt) TBLPROPERTIES (\n" +
-         *                 "    'primary-key' = 'id, dt',\n" +
-         *                 "    'bucket' = '-1',\n" +
-         *                 "    'changelog-producer' = 'lookup',\n" +
-         *                 "    'snapshot.num-retained.max' = '18',\n" +
-         *                 "  'snapshot.num-retained.min' = '6',\n" +
-         *                 "  'snapshot.time-retained' = '2min',\n" +
-         *                 "  'tag.automatic-creation' = 'process-time',\n" +
-         *                 "  'tag.creation-delay' = '600000',\n" +
-         *                 "  'tag.creation-period' = 'hourly',\n" +
-         *                 "  'tag.num-retained-max' = '90'\n" +
-         *                 ");")
-         */
+        return sb.toString();
+    }
+
+    public static String genInitSql(List<StructField> paimonSchema, PaimonTableConf paimonTableConf) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("insert into paimon.paimon_ods.").append(genTableName(paimonTableConf)).append("(");
+        sb.append(paimonSchema.stream().map(
+                StructField::name
+        ).collect(Collectors.joining(",\n\t")));
+        sb.append(") select ");
+        sb.append(paimonSchema.stream()
+                .map(StructField::name)
+                .filter(name -> !name.equals(DEFAULT_PARTITION_COLUMN_NAME))
+                .filter(name -> !name.equals(MQ_PARTITION_INDEX_KEY))
+                .filter(name -> !name.equals(MQ_PARTITION_OFFSET_KEY))
+                .filter(name -> !name.equals(MQ_META_TIMESTAMP_KEY))
+                .filter(name -> !name.equals(IS_CDC_DELETE_KEY))
+                .collect(Collectors.joining(",\n\t"))
+        );
+        sb.append(",\n");
+        if (findPartitionColumn(paimonSchema, paimonTableConf).dataType() == DataTypes.TimestampNTZType) {
+            sb.append("date(").append(findPartitionColumn(paimonSchema, paimonTableConf).name()).append(") as ")
+                    .append(DEFAULT_PARTITION_COLUMN_NAME).append(",\n");
+        }
+        sb.append("0 as " + MQ_PARTITION_INDEX_KEY + ",\n");
+        sb.append("0 as " + MQ_PARTITION_OFFSET_KEY + ",\n");
+        sb.append(paimonTableConf.getMetaTimestampColumn()).append(" as ").append(MQ_META_TIMESTAMP_KEY).append(",\n");
+        sb.append("0 as " + IS_CDC_DELETE_KEY + "\n");
+        sb.append("from ods_tbl");
         return sb.toString();
     }
 }

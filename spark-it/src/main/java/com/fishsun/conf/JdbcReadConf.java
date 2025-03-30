@@ -1,164 +1,154 @@
 package com.fishsun.conf;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 
+/**
+ * 必须指定 tableName
+ */
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 @Data
 public class JdbcReadConf {
+
+    public static final String URL_KEY = "url";
+    public static final String USERNAME_KEY = "username";
+    public static final String PASSWORD_KEY = "password";
+    public static final String TABLE_NAME_KEY = "table";
+    public static final String QUERY_KEY = "query";
+    public static final String DB_TABLE_KEY = "db_table";
+    public static final String PARTITION_COLUMN_KEY = "partition_column";
+    public static final String LOWER_BOUND_KEY = "lower_bound";
+    public static final String UPPER_BOUND_KEY = "upper_bound";
+    public static final String NUM_PARTITIONS_KEY = "num_partitions";
+
     // 不可变的属性
-    private final String url;
-    private final String driverClass;
-    private final String username;
-    private final String password;
+    private String url;
+    private String driverClass; // infer
+    private String username;
+    private String password;
 
-    private final String partitionColumn;
-    private final String lowerBound;
-    private final String upperBound;
-    private final String query;
-    private final String dbTable;
-    private boolean isUseQuery;
-    private boolean isUsePartitionColumn;
-    private final Boolean isPartitionTable;
-    private final String partitionFromColumn;
-    private final List<String> primaryKeys;
+    private String tableName;
 
-    // 私有构造方法，通过Builder创建实例
-    private JdbcReadConf(Builder builder) {
-        this.url = builder.url;
-        this.driverClass = builder.driverClass;
-        this.username = builder.username;
-        this.password = builder.password;
-        this.partitionColumn = builder.partitionColumn;
-        this.lowerBound = builder.lowerBound;
-        this.upperBound = builder.upperBound;
-        this.query = builder.query;
-        this.dbTable = builder.dbTable;
-        this.isPartitionTable = builder.isPartitionTable;
-        if (this.query != null) {
-            this.isUseQuery = true;
+    private String query;
+    private String dbTable;
+    private String partitionColumn;
+    private String lowerBound;
+    private String upperBound;
+    private int numPartitions;
+    private boolean isUseQuery; // infer
+    private boolean isUsePartitionColumn; // infer
+
+    public static JdbcReadConf toJdbcReadConf(Map<String, String> taskParams) {
+        if (taskParams == null) {
+            throw new IllegalArgumentException("task params is null when toJdbcReadConf");
         }
-        if (this.query == null && this.partitionColumn != null) {
-            this.isUsePartitionColumn = true;
+        JdbcReadConfBuilder builder = JdbcReadConf.builder();
+        if (taskParams.containsKey(URL_KEY)) {
+            builder.url(taskParams.get(URL_KEY));
+        } else {
+            throw new IllegalArgumentException(URL_KEY + " is null when toJdbcReadConf");
         }
-        this.partitionFromColumn = builder.partitionFromColumn;
-        this.primaryKeys = builder.primaryKeys;
-    }
-
-    // 静态内部Builder类
-    public static class Builder {
-        private String url;
-        private String driverClass;
-        private String username;
-        private String password;
-        private String partitionColumn;
-        private String lowerBound;
-        private String upperBound;
-        private String query;
-        private String dbTable;
-        private Boolean isPartitionTable;
-        private String partitionFromColumn;
-        private List<String> primaryKeys;
-
-        public Builder primaryKeys(List<String> primaryKeys) {
-            this.primaryKeys = primaryKeys;
-            return this;
+        if (taskParams.containsKey(USERNAME_KEY)) {
+            builder.username(taskParams.get(USERNAME_KEY));
+        } else {
+            throw new IllegalArgumentException(USERNAME_KEY + " is null when toJdbcReadConf");
+        }
+        if (taskParams.containsKey(PASSWORD_KEY)) {
+            builder.password(taskParams.get(PASSWORD_KEY));
+        } else {
+            throw new IllegalArgumentException(PASSWORD_KEY + " is null when toJdbcReadConf");
+        }
+        if (taskParams.containsKey(TABLE_NAME_KEY)) {
+            builder.tableName(taskParams.get(TABLE_NAME_KEY));
+        } else {
+            throw new IllegalArgumentException(TABLE_NAME_KEY + "tableName is null when toJdbcReadConf");
         }
 
-
-        // 设置url的方法，返回Builder自身以支持链式调用
-        public Builder url(String url) {
-            this.url = url;
-            return this;
+        if (taskParams.containsKey(QUERY_KEY)) {
+            builder.query(taskParams.get(QUERY_KEY));
         }
 
-        // 设置driverClass的方法，返回Builder自身以支持链式调用
-        public Builder driverClass(String driverClass) {
-            this.driverClass = driverClass;
-            return this;
+        if (taskParams.containsKey(DB_TABLE_KEY)) {
+            builder.dbTable(taskParams.get(DB_TABLE_KEY));
         }
 
-        public Builder username(String username) {
-            this.username = username;
-            return this;
+        if (taskParams.containsKey(QUERY_KEY) && taskParams.containsKey(DB_TABLE_KEY)) {
+            throw new IllegalArgumentException("only one of " + QUERY_KEY + " and " + DB_TABLE_KEY + " can be set");
         }
 
-        public Builder password(String password) {
-            this.password = password;
-            return this;
+        if (!taskParams.containsKey(QUERY_KEY) && !taskParams.containsKey(DB_TABLE_KEY)) {
+            throw new IllegalArgumentException("One of " + QUERY_KEY + " and " + DB_TABLE_KEY + " should be set");
         }
 
-        public Builder partitionColumn(String partitionColumn) {
-            this.partitionColumn = partitionColumn;
-            return this;
-        }
-
-        public Builder lowerBound(String lowerBound) {
-            this.lowerBound = lowerBound;
-            return this;
-        }
-
-        public Builder upperBound(String upperBound) {
-            this.upperBound = upperBound;
-            return this;
-        }
-
-        public Builder query(String query) {
-            this.query = query;
-            return this;
-        }
-
-        public Builder dbTable(String dbTable) {
-            this.dbTable = dbTable;
-            return this;
-        }
-
-        public Builder isPartitionTable(boolean isPartitionTable) {
-            this.isPartitionTable = isPartitionTable;
-            return this;
-        }
-
-        public Builder partitionFromColumn(String partitionFromColumn) {
-            this.partitionFromColumn = partitionFromColumn;
-            return this;
-        }
-
-        // 构建JdbcReadConf实例
-        public JdbcReadConf build() {
-            // 检查driverClass是否为空或空字符串，若是则根据url推断
-            if (driverClass == null || driverClass.isEmpty()) {
-                driverClass = inferDriverClass(url);
-            }
-            if (isPartitionTable == null) {
-                isPartitionTable = false;
-            }
-            if (primaryKeys == null) {
-                this.primaryKeys = new ArrayList<>();
-            }
-            return new JdbcReadConf(this);
-        }
-
-        // 根据url推断driverClass的私有方法
-        private String inferDriverClass(String url) {
-            // 检查url是否有效
-            if (url == null || url.isEmpty()) {
-                throw new IllegalArgumentException("URL cannot be null or empty");
-            }
-            // 根据URL前缀推断驱动类
-            if (url.startsWith("jdbc:mysql:")) {
-                return "com.mysql.cj.jdbc.Driver";        // MySQL驱动
-            } else if (url.startsWith("jdbc:postgresql:")) {
-                return "org.postgresql.Driver";        // PostgreSQL驱动
-            } else if (url.startsWith("jdbc:oracle:")) {
-                return "oracle.jdbc.driver.OracleDriver";  // Oracle驱动
+        if (taskParams.containsKey(PARTITION_COLUMN_KEY)) {
+            builder.partitionColumn(taskParams.get(PARTITION_COLUMN_KEY));
+            if (taskParams.containsKey(UPPER_BOUND_KEY)) {
+                builder.upperBound(taskParams.get(UPPER_BOUND_KEY));
             } else {
-                throw new IllegalArgumentException("Cannot infer driver class from url: " + url);
+                throw new IllegalArgumentException(
+                        UPPER_BOUND_KEY + " is null when toJdbcReadConf and " + DB_TABLE_KEY + " is set");
+            }
+            if (taskParams.containsKey(LOWER_BOUND_KEY)) {
+                builder.lowerBound(taskParams.get(LOWER_BOUND_KEY));
+            } else {
+                throw new IllegalArgumentException(
+                        LOWER_BOUND_KEY + " is null when toJdbcReadConf and " + DB_TABLE_KEY + " is set");
+            }
+            if (taskParams.containsKey(NUM_PARTITIONS_KEY)) {
+                builder.numPartitions(Integer.parseInt(taskParams.get(NUM_PARTITIONS_KEY)));
+            } else {
+                builder.numPartitions(200);
+            }
+        }
+        builder.isUseQuery(true);
+        builder.isUsePartitionColumn(true);
+        JdbcReadConf jdbcReadConf = builder.build();
+        jdbcReadConf.inferDriverClass();
+        jdbcReadConf.checkIsUseQuery();
+        return jdbcReadConf;
+    }
+
+    private void checkIsUseQuery() {
+        if (query == null || query.isEmpty()) {
+            isUseQuery = false;
+        } else {
+            isUseQuery = true;
+        }
+        if (isUseQuery) {
+            isUsePartitionColumn = false;
+        } else {
+            if (partitionColumn == null || partitionColumn.isEmpty()) {
+                isUsePartitionColumn = false;
+                ;
+            } else {
+                isUsePartitionColumn = true;
             }
         }
     }
 
-    public static void main(String[] args) {
-
+    // 根据url推断driverClass的私有方法
+    private String inferDriverClass() {
+        // 检查url是否有效
+        if (url == null || url.isEmpty()) {
+            throw new IllegalArgumentException("URL cannot be null or empty");
+        }
+        // 根据URL前缀推断驱动类
+        if (url.startsWith("jdbc:mysql:")) {
+            return "com.mysql.cj.jdbc.Driver";        // MySQL驱动
+        } else if (url.startsWith("jdbc:postgresql:")) {
+            return "org.postgresql.Driver";        // PostgreSQL驱动
+        } else if (url.startsWith("jdbc:oracle:")) {
+            return "oracle.jdbc.driver.OracleDriver";  // Oracle驱动
+        } else {
+            throw new IllegalArgumentException("Cannot infer driver class from url: " + url);
+        }
     }
 }
+

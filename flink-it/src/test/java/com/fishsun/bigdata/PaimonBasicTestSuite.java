@@ -31,12 +31,13 @@ public class PaimonBasicTestSuite {
         //设置WebUI绑定的本地端口
         conf.setString(RestOptions.BIND_PORT, "8090-8100");
         conf.setString("table.exec.sink.upsert-materialize", "NONE");
+        // 设置并行
         FileUtils.clearDir(FileUtils.getPipelineIOCachePath(false), true);
         conf.setString("taskmanager.tmp.dirs", FileUtils.getPipelineIOCachePath(false));
         // 设置执行环境
         env = StreamExecutionEnvironment.createLocalEnvironment(conf);
-        env.setMaxParallelism(1);
-        env.setParallelism(1);
+         env.setMaxParallelism(1);
+         env.setParallelism(1);
         env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
         env.getCheckpointConfig().setCheckpointInterval(checkpointInterval);
         env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);
@@ -44,6 +45,8 @@ public class PaimonBasicTestSuite {
         env.getCheckpointConfig().setCheckpointStorage("file://" + FileUtils.getCheckpointPath());
         tableEnv = StreamTableEnvironment.create(env);
         tableEnv.getConfig().setLocalTimeZone(ZoneId.of("Asia/Shanghai"));
+        // 关闭 parallel 的推断
+
 
 
         // Create a source table

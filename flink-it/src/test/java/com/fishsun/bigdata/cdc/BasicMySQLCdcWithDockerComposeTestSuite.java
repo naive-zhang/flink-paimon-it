@@ -1,7 +1,7 @@
 package com.fishsun.bigdata.cdc;
 
-import com.fishsun.bigdata.PaimonBasicTestSuite;
-import com.fishsun.bigdata.catalog.HiveCatalogTestSuite;
+import com.fishsun.bigdata.catalog.PaimonHiveCatalogTestSuite;
+import com.ververica.cdc.connectors.mysql.source.MySqlSource;
 import com.ververica.cdc.connectors.mysql.table.StartupOptions;
 import com.ververica.cdc.debezium.JsonDebeziumDeserializationSchema;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
@@ -11,12 +11,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.testcontainers.containers.DockerComposeContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
-import com.ververica.cdc.connectors.mysql.source.MySqlSource;
 
 import java.io.File;
 
-
-public class BasicMySQLCdcWithDockerComposeTestSuite extends HiveCatalogTestSuite {
+public class BasicMySQLCdcWithDockerComposeTestSuite extends PaimonHiveCatalogTestSuite {
     protected static boolean USING_INTERNAL_DOCKER_COMPOSE = true;
     private DockerComposeContainer<?> composeContainer;
     public String jdbcUrl;

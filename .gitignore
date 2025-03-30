@@ -13,3 +13,4 @@ metastore_db
 */dependency-reduced-pom.xml
 *.jar
 *.log
+spark-it/src/main/java/com/fishsun/utils/FileUtils.java

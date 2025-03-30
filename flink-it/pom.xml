@@ -189,6 +189,14 @@
         </dependency>
 
 
+        <!-- paimon hive -->
+        <dependency>
+            <groupId>org.apache.paimon</groupId>
+            <artifactId>paimon-hive-connector-3.1</artifactId>
+            <version>0.9.0</version>
+        </dependency>
+
+
         <!-- flink cdc -->
         <dependency>
             <groupId>org.apache.flink</groupId>

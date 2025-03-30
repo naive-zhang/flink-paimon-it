@@ -1,6 +1,8 @@
 package com.fishsun;
 
 import com.fishsun.conf.JdbcReadConf;
+import com.fishsun.conf.PaimonTableConf;
+import com.fishsun.conf.SparkTaskConf;
 import com.fishsun.utils.FileUtils;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
@@ -8,77 +10,113 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.StructField;
 
-import java.sql.*;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.fishsun.utils.SchemaUtils.*;
+import static com.fishsun.conf.JdbcReadConf.toJdbcReadConf;
+import static com.fishsun.conf.PaimonTableConf.CATALOG_NAME;
+import static com.fishsun.conf.PaimonTableConf.DB_NAME;
+import static com.fishsun.conf.PaimonTableConf.FULL_DB_NAME;
+import static com.fishsun.conf.PaimonTableConf.toPaimonTableConf;
+import static com.fishsun.conf.SparkTaskConf.toSparkTaskConf;
+import static com.fishsun.utils.FileUtils.parseJsonFromFile;
+import static com.fishsun.utils.SchemaUtils.genInitSql;
+import static com.fishsun.utils.SchemaUtils.genTableName;
+import static com.fishsun.utils.SchemaUtils.injectSchema;
+import static com.fishsun.utils.SchemaUtils.toDefaultPaimonTable;
+import static com.fishsun.utils.SchemaUtils.toPaimonSchema;
 
 public class PaimonHiveCatalog {
 
+    public static Map<String, String> getTaskParams() {
+        Map<String, String> taskParams = new HashMap<>();
+        // spark 相关的配置
+        taskParams.put("app.name", "Spark Paimon with Hive Catalog");
+        taskParams.put("master", "local[*]");
+        taskParams.put("spark.sql.catalog.paimon.warehouse", FileUtils.getWarehousePath());
+        taskParams.put("spark.sql.catalog.paimon.uri", "thrift://localhost:9083");
+        // paimon 表相关的配置
+        taskParams.put("sys_name", "local");
+        taskParams.put("db_name", "test");
+        taskParams.put("table_name", "user_profile");
+        taskParams.put("partition_source", "created_at");
+        taskParams.put("pk", "id, dt");
+        taskParams.put("meta_timestamp", "updated_at");
+        // jdbc 相关的配置
+        taskParams.put("url", "jdbc:mysql://localhost:3306/inventory");
+        taskParams.put("username", "root");
+        taskParams.put("password", "123456");
+        taskParams.put("table", "user_profile");
+        taskParams.put("db_table", "user_profile");
+        taskParams.put("partition_column", "updated_at");
+        taskParams.put("lower_bound", "2024-01-01");
+        taskParams.put("upper_bound", "2025-03-31");
+        taskParams.put("num_partitions", "500");
+
+        return taskParams;
+    }
+
 
     public static void main(String[] args) {
-        // // 创建 SparkSession
-        SparkSession spark = SparkSession.builder()
-                .appName("Spark Paimon with Hive Catalog")
-                // 如果是本地测试，可以加上 master
-                .master("local[*]")
-                // 配置 Paimon Catalog
-                .config("spark.sql.extensions", "org.apache.paimon.spark.extensions.PaimonSparkSessionExtensions")
-                // 这里的 "paimon" 是我们在 spark.sql.catalog 中自定义的 catalog 名称
-                .config("spark.sql.catalog.paimon", "org.apache.paimon.spark.SparkCatalog")
-                // 指定 Paimon 仓库位置（可以是 HDFS / S3 / 本地文件系统等）
-                .config("spark.sql.catalog.paimon.warehouse", FileUtils.getWarehousePath())
-                // 如果需要 Spark 的 Hive 支持，可以启用
-                .config("spark.sql.catalog.paimon.metastore", "hive")
-                .config("spark.sql.catalog.paimon.uri", "thrift://localhost:9083")
-                // --conf spark.sql.catalog.paimon.metastore=hive \
-                //    --conf spark.sql.catalog.paimon.uri=thrift://<hive-metastore-host-name>:<port>
-                .enableHiveSupport()
-                .getOrCreate();
+        // 获得参数
+        Map<String, String> taskParams =
+                parseJsonFromFile(args[0]);
 
-
+        // 获得 spark相关的配置
+        SparkTaskConf sparkTaskConf = toSparkTaskConf(taskParams);
+        // 生成 sparkSession
+        SparkSession spark = sparkTaskConf.toSparkSession();
+        // get paimon table conf
+        PaimonTableConf paimonTableConf = toPaimonTableConf(taskParams);
+        // get jdbc conf
+        JdbcReadConf jdbcReadConf = toJdbcReadConf(taskParams);
         // init database
         initDatabase(spark);
         // show databases
         showDatabases(spark);
 
-        // get jdbc connection
-        JdbcReadConf jdbcReadConf = getJdbcReadConf();
+        // show tables
+        showTables(spark, CATALOG_NAME, DB_NAME);
+
         // get jdbc table
         Dataset<Row> jdbcDataSet = readFromJdbc(spark, jdbcReadConf);
+
+        jdbcDataSet.explain();
 
         // 转成相应的paimon的格式
         List<StructField> paimonSchema = toPaimonSchema(jdbcDataSet);
 
         // 注入schema和注释信息
-        paimonSchema = injectSchema(paimonSchema, jdbcReadConf);
+        paimonSchema =
 
-        String ddl = toDefaultPaimonTable(paimonSchema, jdbcReadConf);
+                injectSchema(paimonSchema, jdbcReadConf, paimonTableConf);
+
+        String ddl = toDefaultPaimonTable(paimonSchema, paimonTableConf);
         System.out.println(ddl);
         spark.sql(ddl);
         // show tables
-        spark.sql("show tables from paimon.paimon_ods").show(false);
+        showTables(spark, CATALOG_NAME, DB_NAME);
         // desc table
-        spark.sql("desc formatted paimon_ods.ods_xxx_user_profile").show(false);
+        spark.sql("desc formatted " + FULL_DB_NAME + "." +
+                        genTableName(paimonTableConf)).
+                show(false);
+        // getSchemas
+        spark.sql("desc formatted " + FULL_DB_NAME + "." +
+                        genTableName(paimonTableConf)).
+                registerTempTable("schema_tbl");
         // 写入数据
         jdbcDataSet.registerTempTable("ods_tbl");
-        spark.sql("insert into paimon_ods.ods_xxx_user_profile " +
-                "select id,\n" +
-                "name,\n" +
-                "age,\n" +
-                "gender,\n" +
-                "birthday,\n" +
-                "balance,\n" +
-                "address,\n" +
-                "details,\n" +
-                "created_at,\n" +
-                "updated_at,\n" +
-                "last_login,\n" +
-                "last_login_date,\n" +
-                "date(created_at) from ods_tbl");
+        String initSql = genInitSql(paimonSchema, paimonTableConf);
+        System.out.println(initSql);
+        spark.sql(initSql).show(false);
+        spark.sql("select count(1) from paimon.paimon_ods." +
+                        genTableName(paimonTableConf)).
+                show(false);
+        spark.sql("select * from paimon.paimon_ods." +
+                        genTableName(paimonTableConf) +
+                        " order by updated_at desc limit 20").
+                show(false);
 
         // 结束 Spark
         spark.stop();
@@ -98,23 +136,12 @@ public class PaimonHiveCatalog {
      * 打印数据库
      */
     public static void showDatabases(SparkSession spark) {
-        spark.sql("show databases from paimon").show();
+        spark.sql("show databases").show();
     }
 
-
-    public static JdbcReadConf getJdbcReadConf() {
-        return new JdbcReadConf.Builder()
-                .url("jdbc:mysql://localhost:3306/inventory")
-                .username("root")
-                .password("123456")
-                .dbTable("user_profile")
-                .isPartitionTable(true)
-                .partitionFromColumn("created_at")
-                .primaryKeys(Arrays.asList("id", "dt"))
-                .build();
-
+    public static void showTables(SparkSession spark, String catalog, String database) {
+        spark.sql("show tables from " + catalog + "." + database).show(false);
     }
-
 
     /**
      * 返回JDBC连接的数据集
@@ -146,6 +173,7 @@ public class PaimonHiveCatalog {
                 return reader.option("partitionColumn", jdbcReadConf.getPartitionColumn())
                         .option("lowerBound", jdbcReadConf.getLowerBound())
                         .option("upperBound", jdbcReadConf.getUpperBound())
+                        .option("numPartitions", jdbcReadConf.getNumPartitions())
                         .load();
             }
             return reader.load();
