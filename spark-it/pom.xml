@@ -26,6 +26,12 @@
 
     <dependencies>
 
+        <dependency>
+            <groupId>com.googlecode.log4jdbc</groupId>
+            <artifactId>log4jdbc</artifactId>
+            <version>1.2</version>
+        </dependency>
+
         <!-- scala lang -->
         <dependency>
             <groupId>org.scala-lang</groupId>

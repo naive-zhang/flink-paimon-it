@@ -4,11 +4,13 @@ import com.fishsun.conf.JdbcReadConf;
 import com.fishsun.conf.PaimonTableConf;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.MetadataBuilder;
 import org.apache.spark.sql.types.StructField;
 
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class SchemaUtils {
@@ -65,16 +68,16 @@ public class SchemaUtils {
         Map<String, String> comments = new HashMap<>();
         String query;
 
-        if (jdbcReadConf.getUrl().startsWith("jdbc:mysql")) {
-            query = "SELECT COLUMN_NAME, COLUMN_COMMENT AS COMMENTS FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '" + jdbcReadConf.getDbTable() + "'";
-        } else if (jdbcReadConf.getUrl().startsWith("jdbc:oracle")) {
-            query = "SELECT COLUMN_NAME, COMMENTS FROM USER_COL_COMMENTS WHERE TABLE_NAME = '" + jdbcReadConf.getDbTable().toUpperCase() + "'";
-        } else if (jdbcReadConf.getUrl().startsWith("jdbc:postgresql")) {
+        if (jdbcReadConf.getUrl().contains("jdbc:mysql")) {
+            query = "SELECT COLUMN_NAME, COLUMN_COMMENT AS COMMENTS FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '" + jdbcReadConf.getTableName() + "'";
+        } else if (jdbcReadConf.getUrl().contains("jdbc:oracle")) {
+            query = "SELECT COLUMN_NAME, COMMENTS FROM USER_COL_COMMENTS WHERE TABLE_NAME = '" + jdbcReadConf.getTableName().toUpperCase() + "'";
+        } else if (jdbcReadConf.getUrl().contains("jdbc:postgresql")) {
             query = "SELECT a.attname AS COLUMN_NAME, d.description AS COMMENTS " +
                     "FROM pg_attribute a " +
                     "JOIN pg_class c ON a.attrelid = c.oid " +
                     "LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = a.attnum " +
-                    "WHERE c.relname = '" + jdbcReadConf.getDbTable() + "' AND a.attnum > 0";
+                    "WHERE c.relname = '" + jdbcReadConf.getTableName() + "' AND a.attnum > 0";
         } else {
             throw new UnsupportedOperationException("Unsupported database: " + jdbcReadConf.getUrl());
         }
@@ -247,6 +250,24 @@ public class SchemaUtils {
                 "'tag.num-retained-max' = '90'\n" +
                 ")");
         return sb.toString();
+    }
+
+    public static void makeSchemaLatest(SparkSession spark, List<StructField> paimonSchema, PaimonTableConf paimonTableConf) {
+        List<String> colList = spark.sql("select col_name from schema_tbl").toJavaRDD().map( x -> x.getString(0)).map(String::trim).collect();
+        System.out.println("current cols");
+        for (String col : colList) {
+            System.out.println(col);
+        }
+        for (StructField structField : paimonSchema) {
+            if (colList.contains(structField.name())) continue;
+            StringBuilder sb2 = new StringBuilder();
+            sb2.append("alter table paimon.paimon_ods.").append(SchemaUtils.genTableName(paimonTableConf));
+            sb2.append(" add column ").append(structField.name()).append(" ").append(structField.dataType().sql())
+                    .append(" ").append("COMMENT '").append((String)structField.getComment().get())
+                    .append("'");
+            String alterSql = sb2.toString();
+            spark.sql(alterSql);
+        }
     }
 
     public static String genInitSql(List<StructField> paimonSchema, PaimonTableConf paimonTableConf) {

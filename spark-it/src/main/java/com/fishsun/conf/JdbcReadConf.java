@@ -27,6 +27,7 @@ public class JdbcReadConf {
     public static final String LOWER_BOUND_KEY = "lower_bound";
     public static final String UPPER_BOUND_KEY = "upper_bound";
     public static final String NUM_PARTITIONS_KEY = "num_partitions";
+    public static final String JDBC_DRIVER_CLASS_KEY = "jdbc_driver_class";
 
     // 不可变的属性
     private String url;
@@ -107,10 +108,14 @@ public class JdbcReadConf {
                 builder.numPartitions(200);
             }
         }
+        if (taskParams.containsKey(JDBC_DRIVER_CLASS_KEY)) {
+            builder.driverClass(taskParams.get(JDBC_DRIVER_CLASS_KEY));
+        } else {
+            builder.driverClass(inferDriverClass(taskParams.get(URL_KEY)));
+        }
         builder.isUseQuery(true);
         builder.isUsePartitionColumn(true);
         JdbcReadConf jdbcReadConf = builder.build();
-        jdbcReadConf.inferDriverClass();
         jdbcReadConf.checkIsUseQuery();
         return jdbcReadConf;
     }
@@ -134,7 +139,7 @@ public class JdbcReadConf {
     }
 
     // 根据url推断driverClass的私有方法
-    private String inferDriverClass() {
+    private static String inferDriverClass(String url) {
         // 检查url是否有效
         if (url == null || url.isEmpty()) {
             throw new IllegalArgumentException("URL cannot be null or empty");
