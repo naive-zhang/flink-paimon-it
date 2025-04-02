@@ -28,7 +28,7 @@ public class PaimonHiveCatalog {
     public static void main(String[] args) {
         // 获得参数
         Map<String, String> taskParams =
-                parseJsonFromFile(args[0]);
+                parseJsonFromFile(args);
 
         // 获得 spark相关的配置
         SparkTaskConf sparkTaskConf = toSparkTaskConf(taskParams);

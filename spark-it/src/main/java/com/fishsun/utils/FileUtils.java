@@ -23,10 +23,11 @@ public class FileUtils {
     /**
      * 解析文件中的 json 内容
      *
-     * @param filePath
+     * @param args
      * @return
      */
-    public static Map<String, String> parseJsonFromFile(String filePath) {
+    public static Map<String, String> parseJsonFromFile(String[] args) {
+        String filePath = args[0];
         Map<String, String> map = new HashMap<>();
         try {
             // 读取文件内容
@@ -50,6 +51,24 @@ public class FileUtils {
             // 处理 JSON 解析错误
             System.out.println("JSON 解析错误: " + e.getMessage());
             e.printStackTrace();
+        }
+        if (args.length > 1) {
+            for (int i = 1; i < args.length; i++) {
+                args[i] = args[i].trim();
+                String[] split = args[i].split("=");
+                String key = split[0];
+                String[] tmp = new String[split.length - 1];
+                for (int j = 1; j < split.length; j++) {
+                    tmp[j - 1] = split[j];
+                }
+                String value = String.join("=", tmp);
+                for (Map.Entry<String, String> entry : map.entrySet()) {
+                    if (entry.getValue().contains("${"+key+"}")) {
+                        String replace = entry.getValue().replace("${" + key + "}", value);
+                        entry.setValue(replace);
+                    }
+                }
+            }
         }
         return map;
     }
