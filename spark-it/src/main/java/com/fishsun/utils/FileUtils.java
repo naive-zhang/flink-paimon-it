@@ -39,10 +39,6 @@ public class FileUtils {
             }.getType();
             // 解析 JSON 为 Map
             map = gson.fromJson(json, type);
-            // 打印 Map 内容
-            for (Map.Entry<String, String> entry : map.entrySet()) {
-                System.out.println(entry.getKey() + ": " + entry.getValue());
-            }
         } catch (IOException e) {
             // 处理文件读取错误
             System.out.println("文件读取错误: " + e.getMessage());
@@ -52,7 +48,9 @@ public class FileUtils {
             System.out.println("JSON 解析错误: " + e.getMessage());
             e.printStackTrace();
         }
-        if (args.length > 1) {
+        // 迭代 10次或者不存在$的情况下跳出迭代
+        for (int iter = 0; iter < 10; iter++) {
+            boolean stopFlag = true;
             for (int i = 1; i < args.length; i++) {
                 args[i] = args[i].trim();
                 String[] split = args[i].split("=");
@@ -62,13 +60,24 @@ public class FileUtils {
                     tmp[j - 1] = split[j];
                 }
                 String value = String.join("=", tmp);
+                if (value.startsWith("\"") && value.endsWith("\"")) {
+                    value = value.substring(1, value.length() - 1);
+                }
                 for (Map.Entry<String, String> entry : map.entrySet()) {
                     if (entry.getValue().contains("${"+key+"}")) {
+                        stopFlag = false;
                         String replace = entry.getValue().replace("${" + key + "}", value);
                         entry.setValue(replace);
                     }
                 }
             }
+            if (stopFlag) {
+                break;
+            }
+        }
+        // 打印 Map 内容
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            System.out.println(entry.getKey() + ": " + entry.getValue());
         }
         return map;
     }

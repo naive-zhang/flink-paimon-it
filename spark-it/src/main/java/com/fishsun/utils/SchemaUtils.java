@@ -10,7 +10,6 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.MetadataBuilder;
 import org.apache.spark.sql.types.StructField;
 
-import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -22,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class SchemaUtils {
@@ -69,9 +67,12 @@ public class SchemaUtils {
         String query;
 
         if (jdbcReadConf.getUrl().contains("jdbc:mysql")) {
-            query = "SELECT COLUMN_NAME, COLUMN_COMMENT AS COMMENTS FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '" + jdbcReadConf.getTableName() + "'";
+            query =
+                    "SELECT COLUMN_NAME, COLUMN_COMMENT AS COMMENTS FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '" +
+                            jdbcReadConf.getTableName() + "'";
         } else if (jdbcReadConf.getUrl().contains("jdbc:oracle")) {
-            query = "SELECT COLUMN_NAME, COMMENTS FROM USER_COL_COMMENTS WHERE TABLE_NAME = '" + jdbcReadConf.getTableName().toUpperCase() + "'";
+            query = "SELECT COLUMN_NAME, COMMENTS FROM USER_COL_COMMENTS WHERE TABLE_NAME = '" +
+                    jdbcReadConf.getTableName().toUpperCase() + "'";
         } else if (jdbcReadConf.getUrl().contains("jdbc:postgresql")) {
             query = "SELECT a.attname AS COLUMN_NAME, d.description AS COMMENTS " +
                     "FROM pg_attribute a " +
@@ -270,22 +271,41 @@ public class SchemaUtils {
         }
     }
 
-    public static String genInitSql(List<StructField> paimonSchema, PaimonTableConf paimonTableConf) {
+    public static String genInitSql(SparkSession spark, List<StructField> paimonSchema,
+                                    PaimonTableConf paimonTableConf, JdbcReadConf jdbcReadConf) {
         StringBuilder sb = new StringBuilder();
         sb.append("insert into paimon.paimon_ods.").append(genTableName(paimonTableConf)).append("(");
         sb.append(paimonSchema.stream().map(
                 StructField::name
         ).collect(Collectors.joining(",\n\t")));
         sb.append(") select ");
-        sb.append(paimonSchema.stream()
+        // sb.append(
+        List<String> colList = paimonSchema.stream()
                 .map(StructField::name)
                 .filter(name -> !name.equals(DEFAULT_PARTITION_COLUMN_NAME))
                 .filter(name -> !name.equals(MQ_PARTITION_INDEX_KEY))
                 .filter(name -> !name.equals(MQ_PARTITION_OFFSET_KEY))
                 .filter(name -> !name.equals(MQ_META_TIMESTAMP_KEY))
                 .filter(name -> !name.equals(IS_CDC_DELETE_KEY))
-                .collect(Collectors.joining(",\n\t"))
-        );
+                .collect(Collectors.toList());
+        List<String> schemaCols =
+                spark.sql("select col_name from schema_tbl").toJavaRDD().map(x -> x.getString(0)).map(String::trim)
+                        .collect();
+        if (jdbcReadConf.getHiveTableName() != null && !jdbcReadConf.getHiveTableName().isEmpty()) {
+            spark.sql("select * from " + jdbcReadConf.getHiveTableName()).registerTempTable("schema_tbl2");
+            schemaCols =
+                    spark.sql("select col_name from schema_tbl2").toJavaRDD().map(x -> x.getString(0)).map(String::trim)
+                            .collect();
+        }
+        System.out.println("generating initial sql");
+        System.out.println("schema cols");
+        for (String schemaCol : schemaCols) {
+            System.out.println(schemaCol);
+        }
+        List<String> finalSchemaCols = schemaCols;
+        sb.append(colList.stream().map(
+                x -> finalSchemaCols.stream().anyMatch(col -> col.trim().equalsIgnoreCase(x)) ? x : "null as " + x
+        ).collect(Collectors.joining(",\n\t")));
         sb.append(",\n");
         if (findPartitionColumn(paimonSchema, paimonTableConf).dataType() == DataTypes.TimestampNTZType) {
             sb.append("date(").append(findPartitionColumn(paimonSchema, paimonTableConf).name()).append(") as ")

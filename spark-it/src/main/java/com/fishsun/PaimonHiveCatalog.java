@@ -3,14 +3,12 @@ package com.fishsun;
 import com.fishsun.conf.JdbcReadConf;
 import com.fishsun.conf.PaimonTableConf;
 import com.fishsun.conf.SparkTaskConf;
-import com.fishsun.utils.FileUtils;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.StructField;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +19,12 @@ import static com.fishsun.conf.PaimonTableConf.FULL_DB_NAME;
 import static com.fishsun.conf.PaimonTableConf.toPaimonTableConf;
 import static com.fishsun.conf.SparkTaskConf.toSparkTaskConf;
 import static com.fishsun.utils.FileUtils.parseJsonFromFile;
-import static com.fishsun.utils.SchemaUtils.*;
+import static com.fishsun.utils.SchemaUtils.genInitSql;
+import static com.fishsun.utils.SchemaUtils.genTableName;
+import static com.fishsun.utils.SchemaUtils.injectSchema;
+import static com.fishsun.utils.SchemaUtils.makeSchemaLatest;
+import static com.fishsun.utils.SchemaUtils.toDefaultPaimonTable;
+import static com.fishsun.utils.SchemaUtils.toPaimonSchema;
 
 public class PaimonHiveCatalog {
 
@@ -36,8 +39,11 @@ public class PaimonHiveCatalog {
         SparkSession spark = sparkTaskConf.toSparkSession();
         // get paimon table conf
         PaimonTableConf paimonTableConf = toPaimonTableConf(taskParams);
+        // 获取任务类型相关
+        // TaskConf taskConf = toTaskConf(taskParams);
         // get jdbc conf
         JdbcReadConf jdbcReadConf = toJdbcReadConf(taskParams);
+        System.out.println("jdbcReadConf = " + jdbcReadConf);
         // init database
         initDatabase(spark);
         // show databases
@@ -47,17 +53,20 @@ public class PaimonHiveCatalog {
         showTables(spark, CATALOG_NAME, DB_NAME);
 
         // get jdbc table
-        Dataset<Row> jdbcDataSet = readFromJdbc(spark, jdbcReadConf);
+        Dataset<Row> jdbcDataSet = readDataSet(spark, jdbcReadConf);
 
         jdbcDataSet.explain();
 
         // 转成相应的paimon的格式
-        List<StructField> paimonSchema = toPaimonSchema(jdbcDataSet);
+        List<StructField> paimonSchema = toPaimonSchema(readFromJdbc(spark, jdbcReadConf));
 
         // 注入schema和注释信息
         paimonSchema =
 
                 injectSchema(paimonSchema, jdbcReadConf, paimonTableConf);
+
+        // 写入数据
+        jdbcDataSet.registerTempTable("ods_tbl");
 
         String ddl = toDefaultPaimonTable(paimonSchema, paimonTableConf);
         System.out.println(ddl);
@@ -74,14 +83,13 @@ public class PaimonHiveCatalog {
                 registerTempTable("schema_tbl");
         // 确保schema信息无误
         makeSchemaLatest(spark, paimonSchema, paimonTableConf);
-        // 写入数据
-        jdbcDataSet.registerTempTable("ods_tbl");
-        String initSql = genInitSql(paimonSchema, paimonTableConf);
+
+        String initSql = genInitSql(spark, paimonSchema, paimonTableConf, jdbcReadConf);
         System.out.println(initSql);
         spark.sql(initSql).show(false);
-        spark.sql("select count(1) from paimon.paimon_ods." +
-                        genTableName(paimonTableConf)).
-                show(false);
+        // spark.sql("select count(1) from paimon.paimon_ods." +
+        //                genTableName(paimonTableConf)).
+        //        show(false);
         spark.sql("select * from paimon.paimon_ods.`" +
                         genTableName(paimonTableConf) +
                         "$snapshots` order by snapshot_id desc limit 20").
@@ -119,10 +127,19 @@ public class PaimonHiveCatalog {
      * @param jdbcReadConf
      * @return
      */
-    public static Dataset<Row> readFromJdbc(SparkSession spark, JdbcReadConf jdbcReadConf) {
+    public static Dataset<Row> readDataSet(SparkSession spark, JdbcReadConf jdbcReadConf) {
         if (jdbcReadConf == null) {
             throw new IllegalArgumentException("jdbcReadConf is null");
         }
+
+        if (jdbcReadConf.getHiveTableName() != null && !jdbcReadConf.getHiveTableName().isEmpty()) {
+            return spark.sql("select * from " + jdbcReadConf.getHiveTableName());
+        } else {
+            return readFromJdbc(spark, jdbcReadConf);
+        }
+    }
+
+    public static Dataset<Row> readFromJdbc(SparkSession spark, JdbcReadConf jdbcReadConf) {
         if (jdbcReadConf.isUseQuery()) {
             return spark.read()
                     .format("jdbc")

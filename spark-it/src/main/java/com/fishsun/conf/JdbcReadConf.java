@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
+import static com.fishsun.utils.TimeUtils.calculateSegments;
+
 /**
  * 必须指定 tableName
  */
@@ -28,6 +30,8 @@ public class JdbcReadConf {
     public static final String UPPER_BOUND_KEY = "upper_bound";
     public static final String NUM_PARTITIONS_KEY = "num_partitions";
     public static final String JDBC_DRIVER_CLASS_KEY = "jdbc_driver_class";
+    public static final String TIME_INTERVAL_KEY = "time_interval";
+    public static final String HIVE_TABLE_NAME_KEY = "hive_table";
 
     // 不可变的属性
     private String url;
@@ -36,6 +40,8 @@ public class JdbcReadConf {
     private String password;
 
     private String tableName;
+
+    private String hiveTableName;
 
     private String query;
     private String dbTable;
@@ -80,12 +86,20 @@ public class JdbcReadConf {
             builder.dbTable(taskParams.get(DB_TABLE_KEY));
         }
 
-        if (taskParams.containsKey(QUERY_KEY) && taskParams.containsKey(DB_TABLE_KEY)) {
-            throw new IllegalArgumentException("only one of " + QUERY_KEY + " and " + DB_TABLE_KEY + " can be set");
+        if (taskParams.containsKey(HIVE_TABLE_NAME_KEY)) {
+            builder.hiveTableName(taskParams.get(HIVE_TABLE_NAME_KEY));
         }
 
-        if (!taskParams.containsKey(QUERY_KEY) && !taskParams.containsKey(DB_TABLE_KEY)) {
-            throw new IllegalArgumentException("One of " + QUERY_KEY + " and " + DB_TABLE_KEY + " should be set");
+        if (taskParams.containsKey(QUERY_KEY) && taskParams.containsKey(DB_TABLE_KEY) &&
+                taskParams.containsKey(HIVE_TABLE_NAME_KEY)) {
+            throw new IllegalArgumentException(
+                    "only one of " + QUERY_KEY + ", " + HIVE_TABLE_NAME_KEY + " and " + DB_TABLE_KEY + " can be set");
+        }
+
+        if (!taskParams.containsKey(QUERY_KEY) && !taskParams.containsKey(DB_TABLE_KEY) &&
+                !taskParams.containsKey(HIVE_TABLE_NAME_KEY)) {
+            throw new IllegalArgumentException(
+                    "One of " + QUERY_KEY + ", " + HIVE_TABLE_NAME_KEY + " and " + DB_TABLE_KEY + " should be set");
         }
 
         if (taskParams.containsKey(PARTITION_COLUMN_KEY)) {
@@ -102,7 +116,11 @@ public class JdbcReadConf {
                 throw new IllegalArgumentException(
                         LOWER_BOUND_KEY + " is null when toJdbcReadConf and " + DB_TABLE_KEY + " is set");
             }
-            if (taskParams.containsKey(NUM_PARTITIONS_KEY)) {
+            if (taskParams.containsKey(TIME_INTERVAL_KEY)) {
+                builder.numPartitions(
+                        calculateSegments(taskParams.get(LOWER_BOUND_KEY), taskParams.get(UPPER_BOUND_KEY),
+                                Integer.parseInt(taskParams.get(TIME_INTERVAL_KEY))));
+            } else if (taskParams.containsKey(NUM_PARTITIONS_KEY)) {
                 builder.numPartitions(Integer.parseInt(taskParams.get(NUM_PARTITIONS_KEY)));
             } else {
                 builder.numPartitions(200);
