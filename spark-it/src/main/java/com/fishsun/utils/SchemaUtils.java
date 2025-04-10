@@ -247,7 +247,7 @@ public class SchemaUtils {
                 "'snapshot.time-retained' = '2min',\n" +
                 "'tag.automatic-creation' = 'process-time',\n" +
                 "'tag.creation-delay' = '600000',\n" +
-                "'tag.creation-period' = 'hourly',\n" +
+                "'tag.creation-period' = 'daily',\n" +
                 "'tag.num-retained-max' = '90'\n" +
                 ")");
         return sb.toString();
